@@ -11,26 +11,17 @@ type Props = { partyId: string; slot: number; member: PokemonMember };
 const EV_KEYS = ['ev_h', 'ev_a', 'ev_b', 'ev_c', 'ev_d', 'ev_s'] as const;
 const STAT_KEYS = ['h', 'a', 'b', 'c', 'd', 's'] as const;
 
-const inputCls = 'w-full rounded-xl border px-3.5 py-3 text-sm transition-colors';
-const inputStyle = { background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)', fontSize: 16 };
-
 export default function MemberEditForm({ partyId, slot, member }: Props) {
   const router = useRouter();
   const [master, setMaster] = useState<PokemonMasterEntry[]>([]);
   const [form, setForm] = useState({
     pokemon_name: member.pokemon_name ?? '',
-    move1: member.move1 ?? '',
-    move2: member.move2 ?? '',
-    move3: member.move3 ?? '',
-    move4: member.move4 ?? '',
+    move1: member.move1 ?? '', move2: member.move2 ?? '',
+    move3: member.move3 ?? '', move4: member.move4 ?? '',
     nature: member.nature ?? '',
     held_item: member.held_item ?? '',
-    ev_h: member.ev_h,
-    ev_a: member.ev_a,
-    ev_b: member.ev_b,
-    ev_c: member.ev_c,
-    ev_d: member.ev_d,
-    ev_s: member.ev_s,
+    ev_h: member.ev_h, ev_a: member.ev_a, ev_b: member.ev_b,
+    ev_c: member.ev_c, ev_d: member.ev_d, ev_s: member.ev_s,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -53,8 +44,7 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
   }, []);
 
   const suggestions = nameQuery.length >= 1
-    ? master.filter((p) => p.name.includes(nameQuery)).slice(0, 8)
-    : [];
+    ? master.filter((p) => p.name.includes(nameQuery)).slice(0, 8) : [];
 
   const currentPokemon = master.find((p) => p.name === form.pokemon_name);
   const evSum = EV_KEYS.reduce((s, k) => s + (form[k] ?? 0), 0);
@@ -64,7 +54,7 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
     ? calcAllStats(
         currentPokemon.base,
         { h: form.ev_h, a: form.ev_a, b: form.ev_b, c: form.ev_c, d: form.ev_d, s: form.ev_s },
-        (form.nature as never) || null
+        (form.nature as never) || null,
       )
     : null;
 
@@ -87,16 +77,12 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
       ...form,
       nature: form.nature || null,
       held_item: form.held_item || null,
-      move1: form.move1 || null,
-      move2: form.move2 || null,
-      move3: form.move3 || null,
-      move4: form.move4 || null,
+      move1: form.move1 || null, move2: form.move2 || null,
+      move3: form.move3 || null, move4: form.move4 || null,
       has_mega_item,
     };
     const res = await fetch(`/api/parties/${partyId}/members/${slot}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const j = await res.json();
@@ -112,29 +98,23 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-5 p-4 pt-5 pb-8">
-      <div className="flex items-center gap-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
+          style={{ width: 36, height: 36, borderRadius: 18, display: 'grid', placeItems: 'center',
+                   background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
           ←
         </button>
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>スロット {slot}</h1>
-        </div>
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>スロット {slot}</h1>
       </div>
 
       {/* ポケモン名 */}
-      <div className="rounded-[18px] border p-5"
-        style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-        <label className="mb-1.5 block text-xs font-bold tracking-[0.04em]"
-          style={{ color: 'var(--ink-sub)' }}>
+      <div className="card" style={{ padding: 14 }}>
+        <div className="section-label" style={{ margin: '0 0 8px' }}>
           ポケモン名<span style={{ color: 'var(--pb)', marginLeft: 4 }}>*</span>
-        </label>
-        <div ref={nameRef} className="relative">
-          <input
-            type="text"
-            value={nameQuery}
+        </div>
+        <div ref={nameRef} style={{ position: 'relative' }}>
+          <input type="text" value={nameQuery}
             onChange={(e) => {
               setNameQuery(e.target.value);
               setForm((f) => ({ ...f, pokemon_name: e.target.value }));
@@ -142,121 +122,100 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
             }}
             onFocus={() => setShowSuggestions(true)}
             placeholder="ガブリアス"
-            className={inputCls}
-            style={inputStyle}
-          />
+            className="input" />
           {showSuggestions && suggestions.length > 0 && (
-            <ul className="absolute z-10 mt-1.5 w-full overflow-hidden rounded-[14px] border"
-              style={{ background: 'var(--card)', borderColor: 'var(--line)',
-                       boxShadow: '0 10px 30px rgba(43,28,75,0.12)' }}>
+            <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 20,
+                          background: 'var(--card)', border: '1px solid var(--line)',
+                          borderRadius: 14, overflow: 'hidden',
+                          boxShadow: '0 10px 30px rgba(43,28,75,0.12)' }}>
               {suggestions.map((p) => (
-                <li key={p.name} className="border-b last:border-0"
-                  style={{ borderColor: 'var(--line-soft)' }}>
-                  <button type="button"
-                    className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm"
-                    style={{ color: 'var(--ink)' }}
-                    onMouseDown={() => {
-                      setForm((f) => ({ ...f, pokemon_name: p.name }));
-                      setNameQuery(p.name);
-                      setShowSuggestions(false);
-                    }}>
-                    <span className="font-bold">{p.name}</span>
-                    <span className="text-xs" style={{ color: 'var(--ink-sub)' }}>{p.types.join('/')}</span>
-                  </button>
-                </li>
+                <button key={p.name} type="button"
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                           padding: '10px 14px', borderBottom: '1px solid var(--line-soft)',
+                           textAlign: 'left' }}
+                  onMouseDown={() => {
+                    setForm((f) => ({ ...f, pokemon_name: p.name }));
+                    setNameQuery(p.name);
+                    setShowSuggestions(false);
+                  }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', flex: 1 }}>{p.name}</span>
+                  <span style={{ fontSize: 11, color: 'var(--ink-sub)' }}>{p.types.join('/')}</span>
+                </button>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </div>
 
       {/* 技 */}
-      <div className="rounded-[18px] border p-5"
-        style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-        <p className="mb-3 text-[15px] font-extrabold" style={{ color: 'var(--ink)' }}>技 1〜4</p>
-        <div className="flex flex-col gap-2.5">
+      <div className="card" style={{ padding: 14 }}>
+        <div className="section-label" style={{ margin: '0 0 10px' }}>技 1〜4</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {(['move1', 'move2', 'move3', 'move4'] as const).map((k, i) => (
-            <div key={k} className="flex items-center gap-2.5">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black"
-                style={{ background: 'var(--mb-soft)', color: 'var(--mb-deep)' }}>
-                {i + 1}
-              </div>
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 24, height: 24, borderRadius: 12, background: 'var(--mb-soft)',
+                            color: 'var(--mb-deep)', display: 'grid', placeItems: 'center',
+                            fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</div>
               <input type="text" value={form[k]}
                 onChange={(e) => setForm((f) => ({ ...f, [k]: e.target.value }))}
-                placeholder={`技 ${i + 1}`}
-                className={inputCls} style={inputStyle} />
+                placeholder={`技 ${i + 1}`} className="input" style={{ flex: 1 }} />
             </div>
           ))}
         </div>
       </div>
 
       {/* 性格・持ち物 */}
-      <div className="rounded-[18px] border p-5"
-        style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-        <p className="mb-3 text-[15px] font-extrabold" style={{ color: 'var(--ink)' }}>性格・持ち物</p>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1.5 block text-xs font-bold" style={{ color: 'var(--ink-sub)' }}>性格</label>
+      <div className="card" style={{ padding: 14 }}>
+        <div className="section-label" style={{ margin: '0 0 10px' }}>性格・持ち物</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div className="field" style={{ margin: 0 }}>
+            <div className="field-label">性格</div>
             <select value={form.nature}
               onChange={(e) => setForm((f) => ({ ...f, nature: e.target.value }))}
-              className={inputCls} style={inputStyle}>
+              className="select" style={{ fontSize: 16 }}>
               <option value="">未設定</option>
               {NATURES.map((n) => <option key={n} value={n}>{n}</option>)}
             </select>
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-bold" style={{ color: 'var(--ink-sub)' }}>持ち物</label>
+          <div className="field" style={{ margin: 0 }}>
+            <div className="field-label">持ち物</div>
             <input type="text" value={form.held_item}
               onChange={(e) => setForm((f) => ({ ...f, held_item: e.target.value }))}
-              className={inputCls} style={inputStyle} />
+              className="input" style={{ fontSize: 16 }} />
           </div>
         </div>
         {form.held_item.endsWith('ナイト') && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold"
-            style={{ background: 'var(--hb-soft)', color: '#7B5310' }}>
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8,
+                        background: 'var(--hb-soft)', borderRadius: 10, padding: '8px 12px',
+                        fontSize: 12, fontWeight: 700, color: '#7B5310' }}>
             メガストーンを検出 — メガシンカ可
           </div>
         )}
       </div>
 
       {/* 努力値 */}
-      <div className="rounded-[18px] border p-5"
-        style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-[15px] font-extrabold" style={{ color: 'var(--ink)' }}>努力値</p>
-          <span className="text-xs font-black"
-            style={{ color: evRemaining < 0 ? 'var(--pb)' : 'var(--ink-sub)' }}>
-            合計 {evSum} / 510 {evRemaining < 0 && '⚠ 超過'}
+      <div className="card" style={{ padding: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div className="section-label" style={{ margin: 0 }}>努力値</div>
+          <span style={{ fontSize: 12, fontWeight: 800,
+                         color: evRemaining < 0 ? 'var(--pb)' : 'var(--ink-sub)' }}>
+            {evSum} / 510 {evRemaining < 0 && '⚠ 超過'}
           </span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="ev-grid">
           {EV_KEYS.map((k, i) => {
             const statKey = STAT_KEYS[i];
             const statVal = calcStats?.[statKey];
             const pct = Math.min(100, ((form[k] ?? 0) / 252) * 100);
             return (
-              <div key={k} className="rounded-[10px] border p-2"
-                style={{ background: 'var(--card-soft)', borderColor: 'var(--line)' }}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] font-black tracking-wider"
-                    style={{ color: 'var(--ink-sub)' }}>
-                    {STAT_LABELS[statKey]}
-                  </span>
-                  {statVal && (
-                    <span className="text-[11px] font-black" style={{ color: 'var(--mb-deep)' }}>
-                      {statVal}
-                    </span>
-                  )}
+              <div key={k} className="ev-cell">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 2px' }}>
+                  <span className="ev-label">{STAT_LABELS[statKey]}</span>
+                  {statVal && <span className="ev-stat">{statVal}</span>}
                 </div>
                 <input type="number" min={0} max={252} value={form[k]}
-                  onChange={(e) => setEv(k, Number(e.target.value))}
-                  className="w-full border-none bg-transparent text-center font-bold text-sm"
-                  style={{ color: 'var(--ink)', fontSize: 15, outline: 'none' }} />
-                <div className="mt-1 h-1.5 overflow-hidden rounded-full"
-                  style={{ background: 'var(--bg-warm)' }}>
-                  <div className="h-full rounded-full transition-all"
-                    style={{ width: `${pct}%`, background: 'var(--mb)' }} />
-                </div>
+                  onChange={(e) => setEv(k, Number(e.target.value))} />
+                <div className="ev-bar"><span style={{ width: `${pct}%` }} /></div>
               </div>
             );
           })}
@@ -264,15 +223,14 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
       </div>
 
       {error && (
-        <p className="rounded-xl px-4 py-3 text-sm font-medium"
-          style={{ background: 'var(--pb-soft)', color: 'var(--pb)' }}>
+        <div style={{ background: 'var(--pb-soft)', border: '1px solid var(--pb)', borderRadius: 12,
+                      padding: '12px 14px', fontSize: 13, fontWeight: 600, color: 'var(--pb)' }}>
           {error}
-        </p>
+        </div>
       )}
 
-      <button onClick={handleSave} disabled={saving}
-        className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-bold text-white disabled:opacity-50"
-        style={{ background: 'var(--mb)', boxShadow: '0 6px 18px rgba(91,47,176,0.35)' }}>
+      <button onClick={handleSave} disabled={saving} className="btn primary block"
+        style={{ height: 56, fontSize: 16 }}>
         {saving ? '保存中...' : '保存する'}
       </button>
     </div>

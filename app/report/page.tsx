@@ -5,89 +5,40 @@ import { useRouter } from 'next/navigation';
 import type { Party, PokemonWinRate } from '@/lib/types';
 
 type Summary = {
-  total: number;
-  wins: number;
-  losses: number;
-  draws: number;
-  win_rate: number;
-  recent10_win_rate: number;
+  total: number; wins: number; losses: number; draws: number;
+  win_rate: number; recent10_win_rate: number;
 };
 
-const sectionStyle = {
-  background: 'var(--card)',
-  borderColor: 'var(--line)',
-  boxShadow: '0 4px 14px rgba(45,30,15,0.04)',
-};
-
-function WinRateTable({
-  rows,
-  filterParam,
-  emptyMsg,
-}: {
-  rows: PokemonWinRate[];
-  filterParam: 'my' | 'opp';
-  emptyMsg: string;
-}) {
-  const router = useRouter();
-
-  if (rows.length === 0) {
-    return (
-      <p className="py-6 text-center text-sm" style={{ color: 'var(--ink-mute)' }}>
-        {emptyMsg}
-      </p>
-    );
-  }
-
+function Donut({ value, color, size = 92 }: { value: number; color: string; size?: number }) {
+  const r = (size - 10) / 2;
+  const circ = 2 * Math.PI * r;
+  const filled = circ * Math.min(100, Math.max(0, value)) / 100;
   return (
-    <div className="flex flex-col">
-      {rows.map((r, i) => {
-        const pct = Number(r.win_rate);
-        const isGood = pct >= 60;
-        const isWeak = pct <= 40;
-        const barColor = isGood ? 'var(--sb)' : isWeak ? 'var(--pb)' : 'var(--mb)';
-        const textColor = isGood ? 'var(--sb)' : isWeak ? 'var(--pb)' : 'var(--ink)';
+    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--line-soft)" strokeWidth={10} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={10}
+        strokeDasharray={`${filled} ${circ - filled}`} strokeLinecap="round" />
+    </svg>
+  );
+}
 
-        return (
-          <button
-            key={r.pokemon_name}
-            onClick={() =>
-              router.push(`/history?${filterParam}=${encodeURIComponent(r.pokemon_name)}`)
-            }
-            className="flex items-center gap-3 border-b py-3 text-left last:border-0"
-            style={{ borderColor: 'var(--line-soft)' }}
-          >
-            <span className="w-5 text-right text-[10px] font-black shrink-0"
-              style={{ color: 'var(--ink-mute)' }}>{i + 1}</span>
-            <span className="w-[6.5rem] shrink-0 text-sm font-bold truncate"
-              style={{ color: 'var(--ink)' }}>
-              {r.pokemon_name}
-            </span>
-            <div className="flex flex-1 flex-col gap-1">
-              <div className="h-1.5 overflow-hidden rounded-full"
-                style={{ background: 'var(--bg-warm)' }}>
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${Math.max(4, pct)}%`, background: barColor }}
-                />
-              </div>
-            </div>
-            <span className="shrink-0 text-xs" style={{ color: 'var(--ink-mute)' }}>
-              {r.count}戦
-            </span>
-            <span
-              className="w-12 shrink-0 text-right text-sm font-black"
-              style={{ color: textColor }}
-            >
-              {pct.toFixed(0)}%
-            </span>
-          </button>
-        );
-      })}
-    </div>
+function WinRateRow({ r, onClick }: { r: PokemonWinRate; onClick: () => void }) {
+  const pct = Number(r.win_rate);
+  const bucket = pct >= 60 ? 'good' : pct >= 45 ? 'mid' : 'weak';
+  return (
+    <button onClick={onClick} className={`stat-row ${bucket}`} style={{ width: '100%', textAlign: 'left' }}>
+      <span className="name">{r.pokemon_name}</span>
+      <span className="count">{r.count}回</span>
+      <div className="bar">
+        <span style={{ width: `${Math.max(4, pct)}%` }} />
+      </div>
+      <span className="pct">{pct.toFixed(1)}%</span>
+    </button>
   );
 }
 
 export default function ReportPage() {
+  const router = useRouter();
   const [parties, setParties] = useState<Party[]>([]);
   const [partyId, setPartyId] = useState('');
   const [myRates, setMyRates] = useState<PokemonWinRate[]>([]);
@@ -97,9 +48,7 @@ export default function ReportPage() {
   const [tab, setTab] = useState<'my' | 'opp'>('my');
 
   useEffect(() => {
-    fetch('/api/parties')
-      .then((r) => r.json())
-      .then((ps: Party[]) => setParties(ps));
+    fetch('/api/parties').then((r) => r.json()).then((ps: Party[]) => setParties(ps));
   }, []);
 
   useEffect(() => {
@@ -117,117 +66,104 @@ export default function ReportPage() {
     });
   }, [partyId]);
 
-  const winRatePct = summary?.win_rate ?? 0;
-  const winRateColor = winRatePct >= 60 ? 'var(--sb)' : winRatePct <= 40 ? 'var(--pb)' : 'var(--mb)';
+  const totalWinRate = summary?.win_rate ?? 0;
+  const recentWinRate = summary?.recent10_win_rate ?? 0;
+  const rows = tab === 'my' ? myRates : oppRates;
 
   return (
-    <div className="flex flex-col gap-4 p-4 pb-10 pt-5">
-      <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>レポート</h1>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
+      <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>レポート</h1>
 
-      {/* パーティフィルター */}
+      {/* Party filter */}
       {parties.length > 0 && (
-        <div className="rounded-[18px] border p-4" style={sectionStyle}>
-          <p className="mb-2 text-[11px] font-black uppercase tracking-[0.08em]"
-            style={{ color: 'var(--ink-sub)' }}>集計対象パーティ</p>
-          <select
-            value={partyId}
-            onChange={(e) => setPartyId(e.target.value)}
-            className="w-full rounded-xl border px-3.5 py-3 text-sm"
-            style={{
-              background: 'var(--card)',
-              borderColor: 'var(--line)',
-              color: 'var(--ink)',
-              fontSize: 16,
-            }}
-          >
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 8px' }}>集計対象パーティ</div>
+          <select value={partyId} onChange={(e) => setPartyId(e.target.value)} className="select">
             <option value="">全パーティ</option>
-            {parties.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
+            {parties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
       )}
 
-      {/* サマリー */}
-      {summary && (
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { label: '総試合数', value: String(summary.total), color: 'var(--ink)' },
-            { label: '通算勝率', value: `${summary.win_rate}%`, color: winRateColor },
-            {
-              label: '直近10戦',
-              value: `${summary.recent10_win_rate}%`,
-              color:
-                summary.recent10_win_rate >= 60
-                  ? 'var(--sb)'
-                  : summary.recent10_win_rate <= 40
-                    ? 'var(--pb)'
-                    : 'var(--mb)',
-            },
-          ].map(({ label, value, color }) => (
-            <div
-              key={label}
-              className="flex flex-col items-center rounded-[18px] border p-3.5"
-              style={sectionStyle}
-            >
-              <span className="text-[10px] font-bold" style={{ color: 'var(--ink-sub)' }}>
-                {label}
-              </span>
-              <span
-                className="mt-1.5 text-xl font-black"
-                style={{ color: loading ? 'var(--ink-mute)' : color }}
-              >
-                {loading ? '—' : value}
-              </span>
+      {/* Ring cards */}
+      {summary && !loading && (
+        <>
+          <div className="ring-card">
+            <div className="ring-wrap">
+              <Donut value={totalWinRate} color="var(--mb)" />
+              <div className="ring-text">
+                <span className="pct">{totalWinRate.toFixed(0)}%</span>
+                <span className="lbl">通算</span>
+              </div>
             </div>
-          ))}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-sub)' }}>通算戦績</div>
+              <div style={{ fontFamily: 'var(--font-num)', fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginTop: 4 }}>
+                {summary.wins}<span style={{ fontSize: 13, color: 'var(--ink-sub)', marginLeft: 2 }}>勝</span>
+                {' '}
+                {summary.losses}<span style={{ fontSize: 13, color: 'var(--ink-sub)', marginLeft: 2 }}>敗</span>
+                {summary.draws > 0 && (
+                  <>{' '}{summary.draws}<span style={{ fontSize: 13, color: 'var(--ink-sub)', marginLeft: 2 }}>分</span></>
+                )}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--ink-sub)', marginTop: 4 }}>計 {summary.total} 戦</div>
+            </div>
+          </div>
+
+          <div className="ring-card">
+            <div className="ring-wrap">
+              <Donut value={recentWinRate} color="var(--sb)" size={92} />
+              <div className="ring-text">
+                <span className="pct" style={{ color: 'var(--sb)' }}>{recentWinRate.toFixed(0)}%</span>
+                <span className="lbl">直近10</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-sub)' }}>直近10戦の勝率</div>
+              <div style={{ fontFamily: 'var(--font-num)', fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginTop: 4 }}>
+                {recentWinRate.toFixed(0)}%
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {loading && (
+        <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: 'var(--ink-mute)' }}>読み込み中...</p>
         </div>
       )}
 
-      {/* Tab switcher */}
-      <div className="flex rounded-xl p-1"
-        style={{ background: 'var(--bg-warm)' }}>
-        {(['my', 'opp'] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className="flex-1 rounded-[10px] py-2 text-sm font-bold transition-all"
-            style={
-              tab === t
-                ? { background: 'var(--card)', color: 'var(--mb)',
-                    boxShadow: '0 2px 8px rgba(43,28,75,0.10)' }
-                : { background: 'transparent', color: 'var(--ink-sub)' }
-            }
-          >
-            {t === 'my' ? '自分の選出' : '相手の選出'}
-          </button>
-        ))}
+      {/* Pill tabs */}
+      <div className="pill-tabs">
+        <button className={`pill ${tab === 'my' ? 'active' : ''}`} onClick={() => setTab('my')}>
+          自分の選出
+        </button>
+        <button className={`pill ${tab === 'opp' ? 'active' : ''}`} onClick={() => setTab('opp')}>
+          相手の選出
+        </button>
       </div>
 
-      {/* Win rate table */}
-      <div className="rounded-[18px] border px-4" style={sectionStyle}>
-        <div className="py-3 flex items-center justify-between border-b"
-          style={{ borderColor: 'var(--line-soft)' }}>
-          <p className="text-[11px] font-black uppercase tracking-[0.08em]"
-            style={{ color: 'var(--ink-sub)' }}>
+      {/* Stat rows */}
+      <div className="card" style={{ padding: '4px 12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '10px 4px 8px', borderBottom: '1px solid var(--line-soft)' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-sub)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             {tab === 'my' ? '選出ポケモン別勝率' : '相手選出ポケモン別勝率'}
-          </p>
-          <p className="text-[10px]" style={{ color: 'var(--ink-mute)' }}>
-            タップで履歴へ
-          </p>
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--ink-mute)' }}>タップで履歴へ</span>
         </div>
         {loading ? (
-          <p className="py-6 text-center text-sm" style={{ color: 'var(--ink-mute)' }}>
-            読み込み中...
-          </p>
+          <p style={{ padding: '20px 0', textAlign: 'center', fontSize: 13, color: 'var(--ink-mute)' }}>読み込み中...</p>
+        ) : rows.length === 0 ? (
+          <p style={{ padding: '20px 0', textAlign: 'center', fontSize: 13, color: 'var(--ink-mute)' }}>データがありません</p>
         ) : (
-          <WinRateTable
-            rows={tab === 'my' ? myRates : oppRates}
-            filterParam={tab}
-            emptyMsg="データがありません"
-          />
+          rows.map((r) => (
+            <WinRateRow
+              key={r.pokemon_name}
+              r={r}
+              onClick={() => router.push(`/history?${tab}=${encodeURIComponent(r.pokemon_name)}`)}
+            />
+          ))
         )}
       </div>
     </div>

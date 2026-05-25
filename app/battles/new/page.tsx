@@ -11,12 +11,6 @@ type OppSlot = { name: string; mega: boolean };
 const EMPTY_SEL: SelSlot = { memberId: null, name: '', mega: false };
 const EMPTY_OPP: OppSlot = { name: '', mega: false };
 
-const sectionStyle = {
-  background: 'var(--card)',
-  borderColor: 'var(--line)',
-  boxShadow: '0 4px 14px rgba(45,30,15,0.04)',
-};
-
 export default function NewBattlePage() {
   const router = useRouter();
   const [master, setMaster] = useState<PokemonMasterEntry[]>([]);
@@ -81,32 +75,20 @@ export default function NewBattlePage() {
     }
     setSaving(true);
     setError('');
-
     const payload = {
       party_id: partyId || null,
-      my_sel1_id: mySlots[0].memberId,
-      my_sel2_id: mySlots[1].memberId,
-      my_sel3_id: mySlots[2].memberId,
-      my_sel1_mega: mySlots[0].mega,
-      my_sel2_mega: mySlots[1].mega,
-      my_sel3_mega: mySlots[2].mega,
+      my_sel1_id: mySlots[0].memberId, my_sel2_id: mySlots[1].memberId, my_sel3_id: mySlots[2].memberId,
+      my_sel1_mega: mySlots[0].mega, my_sel2_mega: mySlots[1].mega, my_sel3_mega: mySlots[2].mega,
       opp_party_json: oppParty.filter(Boolean).length > 0 ? oppParty.filter(Boolean) : null,
-      opp_sel1_name: oppSlots[0].name,
-      opp_sel2_name: oppSlots[1].name,
-      opp_sel3_name: oppSlots[2].name,
-      opp_sel1_mega: oppSlots[0].mega,
-      opp_sel2_mega: oppSlots[1].mega,
-      opp_sel3_mega: oppSlots[2].mega,
+      opp_sel1_name: oppSlots[0].name, opp_sel2_name: oppSlots[1].name, opp_sel3_name: oppSlots[2].name,
+      opp_sel1_mega: oppSlots[0].mega, opp_sel2_mega: oppSlots[1].mega, opp_sel3_mega: oppSlots[2].mega,
       selection_intent: intent || null,
       result,
       reflection: reflection || null,
       rating_after: ratingAfter ? Number(ratingAfter) : null,
     };
-
     const res = await fetch('/api/battles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const j = await res.json();
@@ -119,180 +101,181 @@ export default function NewBattlePage() {
     router.refresh();
   }
 
-  const RESULT_OPTS: { v: 'win' | 'lose' | 'draw'; label: string; activeBg: string; activeShadow: string }[] = [
-    { v: 'win',  label: '勝ち',    activeBg: 'var(--sb)', activeShadow: '0 8px 18px rgba(37,99,217,0.35)' },
-    { v: 'lose', label: '負け',    activeBg: 'var(--pb)', activeShadow: '0 8px 18px rgba(230,57,70,0.35)' },
-    { v: 'draw', label: '引き分け', activeBg: 'var(--ink-sub)', activeShadow: 'none' },
-  ];
-
   return (
-    <div className="flex flex-col gap-5 p-4 pb-10 pt-5">
-      <div className="flex items-center gap-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
+          style={{ width: 36, height: 36, borderRadius: 18, display: 'grid', placeItems: 'center',
+                   background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
           ←
         </button>
-        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>対戦記録</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>対戦記録</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
         {/* パーティ選択 */}
         {parties.length > 0 && (
-          <Card title="使用パーティ">
+          <div className="card" style={{ padding: 14 }}>
+            <div className="section-label" style={{ margin: '0 0 8px' }}>使用パーティ</div>
             <select value={partyId}
               onChange={(e) => { setPartyId(e.target.value); setMySlots([EMPTY_SEL, EMPTY_SEL, EMPTY_SEL]); }}
-              className="w-full rounded-xl border px-3.5 py-3 text-sm"
-              style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)', fontSize: 16 }}>
+              className="select">
               {parties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
-          </Card>
+          </div>
         )}
 
         {/* 自分の選出 */}
-        <Card title="自分の選出（3体選択）">
-          <div className="flex flex-col gap-2">
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 10px' }}>自分の選出（3体選択）</div>
+          {/* Slots preview */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
+            {[0, 1, 2].map((i) => {
+              const slot = mySlots[i];
+              return (
+                <div key={i} className={`slot ${slot.memberId ? 'filled' : ''}`}>
+                  <div className="slot-no">{i + 1}</div>
+                  {slot.memberId ? (
+                    <>
+                      <span className="slot-name">{slot.name}</span>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 4,
+                                      fontSize: 12, fontWeight: 700, color: 'var(--ink-sub)', flexShrink: 0 }}>
+                        <input type="checkbox" checked={slot.mega}
+                          onChange={(e) => setMyMega(i, e.target.checked)} />
+                        メガ
+                      </label>
+                    </>
+                  ) : (
+                    <span className="placeholder">タップして選択</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Member list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {partyMembers.filter((m) => m.pokemon_name).map((m) => {
               const slotIdx = mySlots.findIndex((s) => s.memberId === m.id);
               const selected = slotIdx !== -1;
               const targetIdx = selected ? slotIdx : mySlots.findIndex((s) => !s.memberId);
               return (
-                <div key={m.id} className="flex items-center gap-2">
-                  <button type="button"
-                    onClick={() => targetIdx !== -1 && toggleMyMember(targetIdx, m)}
-                    className="flex-1 rounded-xl border px-3 py-2.5 text-left text-sm font-bold transition-colors"
-                    style={{
-                      background: selected ? 'var(--mb-soft)' : 'var(--card)',
-                      borderColor: selected ? 'var(--mb)' : 'var(--line)',
-                      color: selected ? 'var(--mb-deep)' : 'var(--ink)',
-                    }}>
-                    {selected && <span className="mr-1 font-black">{slotIdx + 1}.</span>}
-                    {m.pokemon_name}
-                    {m.has_mega_item && (
-                      <span className="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-black"
-                        style={{ background: 'var(--hb-soft)', color: '#7B5310' }}>メガ可</span>
-                    )}
-                  </button>
+                <button key={m.id} type="button"
+                  onClick={() => targetIdx !== -1 && toggleMyMember(targetIdx, m)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 12px', borderRadius: 12,
+                    border: `1px solid ${selected ? 'var(--mb)' : 'var(--line)'}`,
+                    background: selected ? 'var(--mb-soft)' : 'var(--card)',
+                    textAlign: 'left',
+                  }}>
                   {selected && (
-                    <label className="flex shrink-0 items-center gap-1 text-xs font-bold"
-                      style={{ color: 'var(--ink-sub)' }}>
-                      <input type="checkbox" checked={mySlots[slotIdx].mega}
-                        onChange={(e) => setMyMega(slotIdx, e.target.checked)} />
-                      メガ
-                    </label>
+                    <span style={{ width: 20, height: 20, borderRadius: 10, background: 'var(--mb)',
+                                   color: '#fff', fontSize: 11, fontWeight: 900,
+                                   display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                      {slotIdx + 1}
+                    </span>
                   )}
-                </div>
+                  <span style={{ flex: 1, fontWeight: 700, fontSize: 14, color: selected ? 'var(--mb-deep)' : 'var(--ink)' }}>
+                    {m.pokemon_name}
+                  </span>
+                  {m.has_mega_item && <span className="badge mega">メガ可</span>}
+                </button>
               );
             })}
             {partyMembers.filter((m) => m.pokemon_name).length === 0 && (
-              <p className="text-sm" style={{ color: 'var(--ink-mute)' }}>パーティにポケモンが登録されていません</p>
+              <p style={{ fontSize: 13, color: 'var(--ink-mute)', textAlign: 'center', padding: '8px 0' }}>
+                パーティにポケモンが登録されていません
+              </p>
             )}
           </div>
-        </Card>
+        </div>
 
         {/* 相手のパーティ（任意） */}
-        <Card title="相手のパーティ（任意・6体）">
-          <div className="grid grid-cols-2 gap-2">
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 10px' }}>相手のパーティ（任意・6体）</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {oppParty.map((v, i) => (
               <PokemonCombobox key={i} value={v}
                 onChange={(val) => setOppParty((prev) => prev.map((x, j) => (j === i ? val : x)))}
                 master={master} placeholder={`${i + 1}体目`} />
             ))}
           </div>
-        </Card>
+        </div>
 
         {/* 相手の選出（必須） */}
-        <Card title="相手の選出（必須・3体）">
-          <div className="flex flex-col gap-2">
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 10px' }}>相手の選出（必須・3体）</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {oppSlots.map((s, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black"
-                  style={{ background: 'var(--mb-soft)', color: 'var(--mb-deep)' }}>
-                  {i + 1}
-                </span>
-                <PokemonCombobox value={s.name} onChange={(val) => setOppSlotName(i, val)}
-                  master={master} className="flex-1" />
-                <label className="flex shrink-0 items-center gap-1 text-xs font-bold"
-                  style={{ color: 'var(--ink-sub)' }}>
-                  <input type="checkbox" checked={s.mega}
-                    onChange={(e) => setOppMega(i, e.target.checked)} />
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 24, height: 24, borderRadius: 12, background: 'var(--mb-soft)',
+                               color: 'var(--mb-deep)', display: 'grid', placeItems: 'center',
+                               fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{i + 1}</span>
+                <div style={{ flex: 1 }}>
+                  <PokemonCombobox value={s.name} onChange={(val) => setOppSlotName(i, val)} master={master} />
+                </div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 4,
+                                fontSize: 12, fontWeight: 700, color: 'var(--ink-sub)', flexShrink: 0 }}>
+                  <input type="checkbox" checked={s.mega} onChange={(e) => setOppMega(i, e.target.checked)} />
                   メガ
                 </label>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
 
         {/* 選出意図 */}
-        <Card title="選出意図（任意）">
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 8px' }}>選出意図（任意）</div>
           <textarea value={intent} onChange={(e) => setIntent(e.target.value)}
             rows={3} maxLength={500}
             placeholder="ガブに対してアシレーヌを後出しする想定で..."
-            className="w-full rounded-xl border px-3.5 py-3 text-sm"
-            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
-                     fontSize: 16, resize: 'vertical' }} />
-        </Card>
+            className="textarea" />
+        </div>
 
         {/* 対戦結果 */}
-        <Card title="対戦結果">
-          <div className="flex gap-2">
-            {RESULT_OPTS.map(({ v, label, activeBg, activeShadow }) => (
-              <button key={v} type="button" onClick={() => setResult(v)}
-                className="flex-1 rounded-2xl py-3.5 text-sm font-black transition-all"
-                style={result === v
-                  ? { background: activeBg, color: '#fff', boxShadow: activeShadow, border: '2px solid transparent' }
-                  : { background: 'var(--card)', color: 'var(--ink-sub)', border: '2px solid var(--line)' }}>
-                {label}
-              </button>
-            ))}
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 10px' }}>対戦結果</div>
+          <div className="wl-toggle" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+            <button type="button" className={`win ${result === 'win' ? 'active' : ''}`}
+              onClick={() => setResult('win')}>勝ち</button>
+            <button type="button" className={`lose ${result === 'lose' ? 'active' : ''}`}
+              onClick={() => setResult('lose')}>負け</button>
+            <button type="button" className={`draw ${result === 'draw' ? 'active' : ''}`}
+              onClick={() => setResult('draw')}>分け</button>
           </div>
-        </Card>
+        </div>
 
         {/* 振り返り */}
-        <Card title="振り返り（任意）">
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 8px' }}>振り返り（任意）</div>
           <textarea value={reflection} onChange={(e) => setReflection(e.target.value)}
             rows={4} maxLength={1000}
             placeholder="ターン1の選択が..."
-            className="w-full rounded-xl border px-3.5 py-3 text-sm"
-            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
-                     fontSize: 16, resize: 'vertical' }} />
-        </Card>
+            className="textarea" />
+        </div>
 
         {/* レート */}
-        <Card title="対戦後レート（任意）">
+        <div className="card" style={{ padding: 14 }}>
+          <div className="section-label" style={{ margin: '0 0 8px' }}>対戦後レート（任意）</div>
           <input type="number" value={ratingAfter}
             onChange={(e) => setRatingAfter(e.target.value)}
-            placeholder="1500"
-            className="w-full rounded-xl border px-3.5 py-3 text-sm"
-            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
-                     fontSize: 16 }} />
-        </Card>
+            placeholder="1500" className="input" />
+        </div>
 
         {error && (
-          <p className="rounded-xl px-4 py-3 text-sm font-medium"
-            style={{ background: 'var(--pb-soft)', color: 'var(--pb)' }}>
+          <div style={{ background: 'var(--pb-soft)', border: '1px solid var(--pb)', borderRadius: 12,
+                        padding: '12px 14px', fontSize: 13, fontWeight: 600, color: 'var(--pb)' }}>
             {error}
-          </p>
+          </div>
         )}
 
-        <button type="submit" disabled={saving}
-          className="flex h-14 w-full items-center justify-center rounded-2xl text-sm font-bold text-white disabled:opacity-50"
-          style={{ background: 'var(--mb)', boxShadow: '0 6px 18px rgba(91,47,176,0.35)' }}>
+        <button type="submit" disabled={saving} className="btn primary block"
+          style={{ height: 56, fontSize: 16 }}>
           {saving ? '記録中...' : '対戦を記録する'}
         </button>
       </form>
-    </div>
-  );
-}
-
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-[18px] border p-5"
-      style={{ background: 'var(--card)', borderColor: 'var(--line)',
-               boxShadow: '0 4px 14px rgba(45,30,15,0.04)' }}>
-      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em]"
-        style={{ color: 'var(--ink-sub)' }}>{title}</p>
-      {children}
     </div>
   );
 }

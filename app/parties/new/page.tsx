@@ -30,51 +30,38 @@ export default function NewPartyPage() {
   }
 
   return (
-    <div className="flex flex-col gap-5 p-4 pt-5">
-      <div className="flex items-center gap-3">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={() => router.back()}
-          className="flex h-9 w-9 items-center justify-center rounded-full"
-          style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
+          style={{ width: 36, height: 36, borderRadius: 18, display: 'grid', placeItems: 'center',
+                   background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
           ←
         </button>
-        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>新しいパーティ</h1>
+        <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>新しいパーティ</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="rounded-[18px] border p-5"
-          style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
-          <label className="mb-1.5 block text-xs font-bold tracking-[0.04em]"
-            style={{ color: 'var(--ink-sub)' }}>
-            パーティ名
-          </label>
-          <input
-            type="text"
-            value={name}
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="card" style={{ padding: 16 }}>
+          <div className="section-label" style={{ margin: '0 0 8px' }}>パーティ名</div>
+          <input type="text" value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="例: ガブリアス軸"
             maxLength={50}
-            className="w-full rounded-xl border px-3.5 py-3 text-sm transition-colors"
-            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
-                     fontSize: 16 }}
-          />
-          <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--ink-sub)' }}>
+            className="input" />
+          <p style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-sub)', lineHeight: 1.6 }}>
             パーティを作成後、各スロットにポケモンを登録してください
           </p>
         </div>
 
         {error && (
-          <p className="rounded-xl px-4 py-3 text-sm font-medium"
-            style={{ background: 'var(--pb-soft)', color: 'var(--pb)' }}>
+          <div style={{ background: 'var(--pb-soft)', borderRadius: 12,
+                        padding: '12px 14px', fontSize: 13, fontWeight: 600, color: 'var(--pb)' }}>
             {error}
-          </p>
+          </div>
         )}
 
-        <button
-          type="submit"
-          disabled={!name.trim() || loading}
-          className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-bold text-white transition-opacity disabled:opacity-50"
-          style={{ background: 'var(--mb)', boxShadow: '0 6px 18px rgba(91,47,176,0.35)' }}
-        >
+        <button type="submit" disabled={!name.trim() || loading}
+          className="btn primary block" style={{ height: 56, fontSize: 16 }}>
           {loading ? '作成中...' : 'パーティを作成'}
         </button>
       </form>

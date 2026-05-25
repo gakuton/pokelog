@@ -22,69 +22,40 @@ export default function HistoryFilterBar() {
   }
 
   function clear() {
-    setMyVal('');
-    setOppVal('');
+    setMyVal(''); setOppVal('');
     startTransition(() => router.push(pathname));
   }
 
   return (
-    <div className="rounded-[18px] border p-4"
-      style={{ background: 'var(--card)', borderColor: 'var(--line)',
-               boxShadow: '0 4px 14px rgba(45,30,15,0.04)' }}>
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-[11px] font-black uppercase tracking-[0.08em]"
-          style={{ color: 'var(--ink-sub)' }}>絞り込み</p>
-        {hasActiveFilter && (
-          <span className="rounded-full px-2 py-0.5 text-[10px] font-black"
-            style={{ background: 'var(--mb-soft)', color: 'var(--mb-deep)' }}>
-            フィルター適用中
-          </span>
-        )}
+    <div className="card" style={{ padding: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span className="section-label" style={{ margin: 0 }}>絞り込み</span>
+        {hasActiveFilter && <span className="badge tag">フィルター適用中</span>}
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="mb-1 block text-[10px] font-bold tracking-wider"
-            style={{ color: 'var(--ink-mute)' }}>自分の選出</label>
-          <input
-            type="text"
-            value={myVal}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+        <div className="field" style={{ margin: 0 }}>
+          <div className="field-label">自分の選出</div>
+          <input type="text" value={myVal}
             onChange={(e) => setMyVal(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && apply()}
-            placeholder="ガブリアス"
-            className="w-full rounded-xl border px-3 py-2.5 text-sm"
-            style={{ background: 'var(--card)', borderColor: 'var(--line)',
-                     color: 'var(--ink)', fontSize: 16 }}
-          />
+            placeholder="ガブリアス" className="input" style={{ fontSize: 16 }} />
         </div>
-        <div>
-          <label className="mb-1 block text-[10px] font-bold tracking-wider"
-            style={{ color: 'var(--ink-mute)' }}>相手の選出</label>
-          <input
-            type="text"
-            value={oppVal}
+        <div className="field" style={{ margin: 0 }}>
+          <div className="field-label">相手の選出</div>
+          <input type="text" value={oppVal}
             onChange={(e) => setOppVal(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && apply()}
-            placeholder="カイリュー"
-            className="w-full rounded-xl border px-3 py-2.5 text-sm"
-            style={{ background: 'var(--card)', borderColor: 'var(--line)',
-                     color: 'var(--ink)', fontSize: 16 }}
-          />
+            placeholder="カイリュー" className="input" style={{ fontSize: 16 }} />
         </div>
       </div>
-      <div className="mt-3 flex gap-2">
-        <button
-          onClick={apply}
-          className="flex-1 rounded-xl py-2.5 text-sm font-bold text-white"
-          style={{ background: 'var(--mb)' }}
-        >
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={apply} className="btn primary"
+          style={{ flex: 1, height: 44 }}>
           絞り込む
         </button>
         {hasActiveFilter && (
-          <button
-            onClick={clear}
-            className="rounded-xl border px-4 py-2.5 text-sm font-bold"
-            style={{ borderColor: 'var(--line)', color: 'var(--ink-sub)' }}
-          >
+          <button onClick={clear} className="btn ghost"
+            style={{ height: 44, padding: '0 16px' }}>
             クリア
           </button>
         )}
