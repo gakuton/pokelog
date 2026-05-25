@@ -30,17 +30,21 @@ export default function NewPartyPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-center gap-2">
-        <button onClick={() => router.back()} className="text-gray-500">
+    <div className="flex flex-col gap-5 p-4 pt-5">
+      <div className="flex items-center gap-3">
+        <button onClick={() => router.back()}
+          className="flex h-9 w-9 items-center justify-center rounded-full"
+          style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
           ←
         </button>
-        <h1 className="text-xl font-bold text-gray-800">新しいパーティ</h1>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>新しいパーティ</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div className="rounded-[18px] border p-5"
+          style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
+          <label className="mb-1.5 block text-xs font-bold tracking-[0.04em]"
+            style={{ color: 'var(--ink-sub)' }}>
             パーティ名
           </label>
           <input
@@ -49,16 +53,27 @@ export default function NewPartyPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder="例: ガブリアス軸"
             maxLength={50}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none"
+            className="w-full rounded-xl border px-3.5 py-3 text-sm transition-colors"
+            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
+                     fontSize: 16 }}
           />
+          <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--ink-sub)' }}>
+            パーティを作成後、各スロットにポケモンを登録してください
+          </p>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="rounded-xl px-4 py-3 text-sm font-medium"
+            style={{ background: 'var(--pb-soft)', color: 'var(--pb)' }}>
+            {error}
+          </p>
+        )}
 
         <button
           type="submit"
           disabled={!name.trim() || loading}
-          className="w-full rounded-xl bg-red-600 py-3 text-sm font-medium text-white disabled:opacity-50"
+          className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-bold text-white transition-opacity disabled:opacity-50"
+          style={{ background: 'var(--mb)', boxShadow: '0 6px 18px rgba(91,47,176,0.35)' }}
         >
           {loading ? '作成中...' : 'パーティを作成'}
         </button>

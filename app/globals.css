@@ -1,26 +1,54 @@
 @import "tailwindcss";
 
+/* ===== Design tokens ===== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #FAF6EE;
+  --bg-warm: #F4ECD9;
+  --card: #FFFFFF;
+  --card-soft: #FBF6EA;
+
+  --ink: #2A2520;
+  --ink-sub: #6E635A;
+  --ink-mute: #A39786;
+
+  --line: #ECE3D2;
+  --line-soft: #F4ECD9;
+
+  --mb: #7B4FD1;
+  --mb-deep: #5B2FB0;
+  --mb-soft: #ECE2FB;
+  --mb-tint: #F6F1FE;
+
+  --pb: #E63946;
+  --pb-soft: #FDE6E8;
+
+  --sb: #2563D9;
+  --sb-soft: #E0EAFC;
+
+  --hb: #E5A521;
+  --hb-soft: #FBEED3;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+* { box-sizing: border-box; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP",
+               -apple-system, "SF Pro", system-ui, sans-serif;
+  font-feature-settings: "palt" 1;
+  -webkit-font-smoothing: antialiased;
+  text-size-adjust: 100%;
+}
+
+input, textarea, select, button { font-family: inherit; }
+
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid var(--mb-soft);
+  outline-offset: 1px;
+  border-color: var(--mb) !important;
 }

@@ -1,12 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
-import type { Battle, WinRateSummary } from '@/lib/types';
-
-type BattleWithNames = Battle & {
-  sel1: { pokemon_name: string } | null;
-  sel2: { pokemon_name: string } | null;
-  sel3: { pokemon_name: string } | null;
-};
+import type { WinRateSummary, Battle } from '@/lib/types';
 
 async function getSummary(): Promise<WinRateSummary | null> {
   const sb = createClient();
@@ -14,126 +8,165 @@ async function getSummary(): Promise<WinRateSummary | null> {
   return data as WinRateSummary | null;
 }
 
-async function getRecentBattles(): Promise<BattleWithNames[]> {
+type RecentBattle = Battle & {
+  sel1: { pokemon_name: string } | null;
+  sel2: { pokemon_name: string } | null;
+  sel3: { pokemon_name: string } | null;
+};
+
+async function getRecentBattles(): Promise<RecentBattle[]> {
   const sb = createClient();
   const { data } = await sb
     .from('battles')
-    .select(`*, sel1:pokemon_members!battles_my_sel1_id_fkey(pokemon_name),
-                  sel2:pokemon_members!battles_my_sel2_id_fkey(pokemon_name),
-                  sel3:pokemon_members!battles_my_sel3_id_fkey(pokemon_name)`)
+    .select(`*, sel1:my_sel1_id(pokemon_name), sel2:my_sel2_id(pokemon_name), sel3:my_sel3_id(pokemon_name)`)
     .order('created_at', { ascending: false })
     .limit(5);
-  return (data ?? []) as BattleWithNames[];
+  return (data ?? []) as RecentBattle[];
 }
 
-const RESULT_LABEL: Record<string, string> = { win: '勝', lose: '負', draw: '分' };
-const RESULT_CLS: Record<string, string> = {
-  win: 'bg-blue-100 text-blue-700',
-  lose: 'bg-red-100 text-red-700',
-  draw: 'bg-gray-100 text-gray-500',
+const RESULT_CHIP: Record<string, { label: string; bg: string }> = {
+  win:  { label: '勝', bg: 'var(--sb)'  },
+  lose: { label: '負', bg: 'var(--pb)'  },
+  draw: { label: '分', bg: 'var(--ink-mute)' },
 };
 
 export default async function HomePage() {
   const [summary, battles] = await Promise.all([getSummary(), getRecentBattles()]);
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <h1 className="text-xl font-bold text-red-600">PokeLog</h1>
+    <div className="flex flex-col p-4 pt-5 gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>PokeLog</h1>
+        <Link href="/parties" className="flex items-center gap-1 text-sm font-bold"
+          style={{ color: 'var(--mb)' }}>
+          パーティ管理
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"/>
+          </svg>
+        </Link>
+      </div>
 
-      {/* 勝率サマリー */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
-        <p className="mb-3 text-xs font-medium text-gray-500">勝率サマリー</p>
-        {!summary || summary.total_battles === 0 ? (
-          <p className="text-sm text-gray-400">対戦記録がありません</p>
-        ) : (
-          <div className="grid grid-cols-2 gap-y-3 gap-x-4">
-            <StatCell label="総戦数" value={`${summary.total_battles} 戦`} />
-            <StatCell label="通算勝率" value={`${summary.total_win_rate ?? 0}%`} accent />
-            <StatCell
-              label="直近10戦"
-              value={`${summary.recent10_wins}勝${summary.recent10_draws}分 (${summary.recent10_win_rate ?? 0}%)`}
-            />
-            <StatCell
-              label="レート"
-              value={summary.latest_rating != null ? String(summary.latest_rating) : '—'}
-              accent
-            />
+      {/* Hero rating card */}
+      <div className="relative overflow-hidden rounded-[22px] p-5"
+        style={{
+          background: 'linear-gradient(140deg, #5B2FB0 0%, #7B4FD1 55%, #9F76E8 100%)',
+          boxShadow: '0 18px 40px rgba(91,47,176,0.35)',
+        }}>
+        <div className="absolute right-[-30px] top-[-30px] rounded-full opacity-20"
+          style={{ width: 160, height: 160, background: 'rgba(255,255,255,0.3)' }} />
+        <div className="text-[11px] font-bold uppercase tracking-[0.1em] text-white/85">
+          現在のレート
+        </div>
+        <div className="my-1 font-black text-white" style={{ fontSize: 44, letterSpacing: '-0.02em', lineHeight: 1.05 }}>
+          {summary?.latest_rating?.toLocaleString() ?? '—'}
+        </div>
+        <div className="mt-3 flex gap-3 rounded-2xl p-3"
+          style={{ background: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(8px)' }}>
+          <div className="flex-1">
+            <div className="text-[10px] font-bold text-white/80 tracking-wider">通算勝率</div>
+            <div className="mt-0.5 font-black text-white" style={{ fontSize: 20 }}>
+              {summary ? `${summary.total_win_rate}%` : '—'}
+            </div>
+            <div className="mt-0.5 text-[10px] text-white/70">
+              {summary ? `${summary.total_wins}勝${summary.total_losses}敗${summary.total_draws}分` : ''}
+            </div>
           </div>
-        )}
-      </section>
+          <div className="w-px self-stretch" style={{ background: 'rgba(255,255,255,0.25)' }} />
+          <div className="flex-1">
+            <div className="text-[10px] font-bold text-white/80 tracking-wider">直近10戦</div>
+            <div className="mt-0.5 font-black text-white" style={{ fontSize: 20 }}>
+              {summary ? `${summary.recent10_win_rate}%` : '—'}
+            </div>
+            <div className="mt-0.5 text-[10px] text-white/70">
+              {summary ? `${summary.recent10_wins}勝` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* 直近の対戦 */}
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <p className="text-sm font-semibold text-gray-700">直近の対戦</p>
-          <Link href="/history" className="text-xs text-red-600">
-            すべて見る
+      {/* Primary CTA */}
+      <Link href="/battles/new"
+        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl text-base font-bold text-white"
+        style={{ background: 'var(--mb)', boxShadow: '0 6px 18px rgba(91,47,176,0.35)' }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.6" strokeLinecap="round"/>
+        </svg>
+        新規対戦を記録
+      </Link>
+
+      {/* Recent battles */}
+      <div>
+        <div className="mb-2 flex items-baseline justify-between px-1">
+          <h2 className="text-[15px] font-extrabold" style={{ color: 'var(--ink)' }}>最近の対戦</h2>
+          <Link href="/history" className="text-xs font-bold" style={{ color: 'var(--mb)' }}>
+            すべて見る ›
           </Link>
         </div>
+
         {battles.length === 0 ? (
-          <p className="py-8 text-center text-sm text-gray-400">対戦記録がありません</p>
+          <div className="rounded-[18px] border p-8 text-center"
+            style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
+            <p className="text-sm" style={{ color: 'var(--ink-sub)' }}>まだ対戦記録がありません</p>
+          </div>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {battles.map((b) => {
+              const chip = RESULT_CHIP[b.result] ?? RESULT_CHIP.draw;
               const myNames = [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name]
-                .filter(Boolean)
-                .join(' / ');
+                .filter(Boolean).join('・');
               const oppNames = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name]
-                .filter(Boolean)
-                .join(' / ');
+                .filter(Boolean).join('・');
+              const date = new Date(b.created_at).toLocaleDateString('ja-JP', {
+                month: 'numeric', day: 'numeric',
+              });
               return (
-                <li key={b.id}>
-                  <Link
-                    href={`/history/${b.id}`}
-                    className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm"
-                  >
-                    <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${RESULT_CLS[b.result]}`}
-                    >
-                      {RESULT_LABEL[b.result]}
+                <Link key={b.id} href={`/history/${b.id}`}
+                  className="rounded-[18px] border p-4"
+                  style={{ background: 'var(--card)', borderColor: 'var(--line)',
+                           boxShadow: '0 4px 14px rgba(45,30,15,0.04)' }}>
+                  <div className="mb-2.5 flex items-center gap-2">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-white"
+                      style={{ background: chip.bg }}>
+                      {chip.label}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs text-gray-600">自: {myNames || '—'}</p>
-                      <p className="truncate text-xs text-gray-600">相: {oppNames}</p>
+                    <span className="text-xs font-bold"
+                      style={{ color: b.result === 'win' ? 'var(--sb)' : b.result === 'lose' ? 'var(--pb)' : 'var(--ink-sub)' }}>
+                      {b.result === 'win' ? '勝利' : b.result === 'lose' ? '敗北' : '引き分け'}
+                    </span>
+                    {b.rating_after && (
+                      <span className="ml-auto rounded-full px-2.5 py-0.5 text-xs font-black"
+                        style={{ background: 'var(--hb-soft)', color: '#7B5310' }}>
+                        {b.rating_after}
+                      </span>
+                    )}
+                    {!b.rating_after && (
+                      <span className="ml-auto text-xs" style={{ color: 'var(--ink-mute)' }}>{date}</span>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
+                    <div className="min-w-0">
+                      <div className="mb-1 text-[10px] font-black tracking-widest"
+                        style={{ color: 'var(--ink-mute)' }}>自分</div>
+                      <div className="truncate text-xs font-bold" style={{ color: 'var(--ink)' }}>
+                        {myNames || '—'}
+                      </div>
                     </div>
-                    <span className="shrink-0 text-xs text-gray-400">
-                      {new Date(b.created_at).toLocaleDateString('ja-JP', {
-                        month: 'numeric',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </Link>
-                </li>
+                    <div className="text-xs font-black" style={{ color: 'var(--ink-mute)' }}>VS</div>
+                    <div className="min-w-0 text-right">
+                      <div className="mb-1 text-[10px] font-black tracking-widest"
+                        style={{ color: 'var(--ink-mute)' }}>相手</div>
+                      <div className="truncate text-xs font-bold" style={{ color: 'var(--ink)' }}>
+                        {oppNames || '—'}
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               );
             })}
-          </ul>
+          </div>
         )}
-      </section>
-
-      {/* FAB */}
-      <Link
-        href="/battles/new"
-        className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-red-600 text-2xl text-white shadow-lg"
-      >
-        ＋
-      </Link>
-    </div>
-  );
-}
-
-function StatCell({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className={`text-lg font-bold ${accent ? 'text-red-600' : 'text-gray-800'}`}>{value}</p>
+      </div>
     </div>
   );
 }

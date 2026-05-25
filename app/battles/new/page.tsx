@@ -11,6 +11,12 @@ type OppSlot = { name: string; mega: boolean };
 const EMPTY_SEL: SelSlot = { memberId: null, name: '', mega: false };
 const EMPTY_OPP: OppSlot = { name: '', mega: false };
 
+const sectionStyle = {
+  background: 'var(--card)',
+  borderColor: 'var(--line)',
+  boxShadow: '0 4px 14px rgba(45,30,15,0.04)',
+};
+
 export default function NewBattlePage() {
   const router = useRouter();
   const [master, setMaster] = useState<PokemonMasterEntry[]>([]);
@@ -113,35 +119,38 @@ export default function NewBattlePage() {
     router.refresh();
   }
 
-  const RESULT_OPTS: { v: 'win' | 'lose' | 'draw'; label: string; cls: string }[] = [
-    { v: 'win', label: '勝ち', cls: 'bg-blue-600 text-white' },
-    { v: 'lose', label: '負け', cls: 'bg-red-600 text-white' },
-    { v: 'draw', label: '引き分け', cls: 'bg-gray-600 text-white' },
+  const RESULT_OPTS: { v: 'win' | 'lose' | 'draw'; label: string; activeBg: string; activeShadow: string }[] = [
+    { v: 'win',  label: '勝ち',    activeBg: 'var(--sb)', activeShadow: '0 8px 18px rgba(37,99,217,0.35)' },
+    { v: 'lose', label: '負け',    activeBg: 'var(--pb)', activeShadow: '0 8px 18px rgba(230,57,70,0.35)' },
+    { v: 'draw', label: '引き分け', activeBg: 'var(--ink-sub)', activeShadow: 'none' },
   ];
 
   return (
-    <div className="flex flex-col gap-5 p-4 pb-10">
-      <div className="flex items-center gap-2">
-        <button onClick={() => router.back()} className="text-gray-500">←</button>
-        <h1 className="text-xl font-bold text-gray-800">対戦記録</h1>
+    <div className="flex flex-col gap-5 p-4 pb-10 pt-5">
+      <div className="flex items-center gap-3">
+        <button onClick={() => router.back()}
+          className="flex h-9 w-9 items-center justify-center rounded-full"
+          style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
+          ←
+        </button>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>対戦記録</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {/* パーティ選択 */}
         {parties.length > 0 && (
-          <Section title="使用パーティ">
-            <select
-              value={partyId}
+          <Card title="使用パーティ">
+            <select value={partyId}
               onChange={(e) => { setPartyId(e.target.value); setMySlots([EMPTY_SEL, EMPTY_SEL, EMPTY_SEL]); }}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none"
-            >
+              className="w-full rounded-xl border px-3.5 py-3 text-sm"
+              style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)', fontSize: 16 }}>
               {parties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
-          </Section>
+          </Card>
         )}
 
         {/* 自分の選出 */}
-        <Section title="自分の選出（3体選択）">
+        <Card title="自分の選出（3体選択）">
           <div className="flex flex-col gap-2">
             {partyMembers.filter((m) => m.pokemon_name).map((m) => {
               const slotIdx = mySlots.findIndex((s) => s.memberId === m.id);
@@ -149,22 +158,26 @@ export default function NewBattlePage() {
               const targetIdx = selected ? slotIdx : mySlots.findIndex((s) => !s.memberId);
               return (
                 <div key={m.id} className="flex items-center gap-2">
-                  <button
-                    type="button"
+                  <button type="button"
                     onClick={() => targetIdx !== -1 && toggleMyMember(targetIdx, m)}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-left text-sm ${selected ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-300 text-gray-700'}`}
-                  >
-                    {selected && <span className="mr-1 font-bold">{slotIdx + 1}.</span>}
+                    className="flex-1 rounded-xl border px-3 py-2.5 text-left text-sm font-bold transition-colors"
+                    style={{
+                      background: selected ? 'var(--mb-soft)' : 'var(--card)',
+                      borderColor: selected ? 'var(--mb)' : 'var(--line)',
+                      color: selected ? 'var(--mb-deep)' : 'var(--ink)',
+                    }}>
+                    {selected && <span className="mr-1 font-black">{slotIdx + 1}.</span>}
                     {m.pokemon_name}
-                    {m.has_mega_item && <span className="ml-1 text-xs text-purple-600">M可</span>}
+                    {m.has_mega_item && (
+                      <span className="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-black"
+                        style={{ background: 'var(--hb-soft)', color: '#7B5310' }}>メガ可</span>
+                    )}
                   </button>
                   {selected && (
-                    <label className="flex items-center gap-1 text-xs text-gray-600 shrink-0">
-                      <input
-                        type="checkbox"
-                        checked={mySlots[slotIdx].mega}
-                        onChange={(e) => setMyMega(slotIdx, e.target.checked)}
-                      />
+                    <label className="flex shrink-0 items-center gap-1 text-xs font-bold"
+                      style={{ color: 'var(--ink-sub)' }}>
+                      <input type="checkbox" checked={mySlots[slotIdx].mega}
+                        onChange={(e) => setMyMega(slotIdx, e.target.checked)} />
                       メガ
                     </label>
                   )}
@@ -172,109 +185,99 @@ export default function NewBattlePage() {
               );
             })}
             {partyMembers.filter((m) => m.pokemon_name).length === 0 && (
-              <p className="text-sm text-gray-400">パーティにポケモンが登録されていません</p>
+              <p className="text-sm" style={{ color: 'var(--ink-mute)' }}>パーティにポケモンが登録されていません</p>
             )}
           </div>
-        </Section>
+        </Card>
 
         {/* 相手のパーティ（任意） */}
-        <Section title="相手のパーティ（任意・6体）">
+        <Card title="相手のパーティ（任意・6体）">
           <div className="grid grid-cols-2 gap-2">
             {oppParty.map((v, i) => (
-              <PokemonCombobox
-                key={i}
-                value={v}
+              <PokemonCombobox key={i} value={v}
                 onChange={(val) => setOppParty((prev) => prev.map((x, j) => (j === i ? val : x)))}
-                master={master}
-                placeholder={`${i + 1}体目`}
-              />
+                master={master} placeholder={`${i + 1}体目`} />
             ))}
           </div>
-        </Section>
+        </Card>
 
         {/* 相手の選出（必須） */}
-        <Section title="相手の選出（必須・3体）">
+        <Card title="相手の選出（必須・3体）">
           <div className="flex flex-col gap-2">
             {oppSlots.map((s, i) => (
               <div key={i} className="flex items-center gap-2">
-                <span className="w-4 shrink-0 text-xs text-gray-500">{i + 1}</span>
-                <PokemonCombobox
-                  value={s.name}
-                  onChange={(val) => setOppSlotName(i, val)}
-                  master={master}
-                  className="flex-1"
-                />
-                <label className="flex items-center gap-1 text-xs text-gray-600 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={s.mega}
-                    onChange={(e) => setOppMega(i, e.target.checked)}
-                  />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black"
+                  style={{ background: 'var(--mb-soft)', color: 'var(--mb-deep)' }}>
+                  {i + 1}
+                </span>
+                <PokemonCombobox value={s.name} onChange={(val) => setOppSlotName(i, val)}
+                  master={master} className="flex-1" />
+                <label className="flex shrink-0 items-center gap-1 text-xs font-bold"
+                  style={{ color: 'var(--ink-sub)' }}>
+                  <input type="checkbox" checked={s.mega}
+                    onChange={(e) => setOppMega(i, e.target.checked)} />
                   メガ
                 </label>
               </div>
             ))}
           </div>
-        </Section>
+        </Card>
 
         {/* 選出意図 */}
-        <Section title="選出意図（任意）">
-          <textarea
-            value={intent}
-            onChange={(e) => setIntent(e.target.value)}
-            rows={2}
-            maxLength={500}
+        <Card title="選出意図（任意）">
+          <textarea value={intent} onChange={(e) => setIntent(e.target.value)}
+            rows={3} maxLength={500}
             placeholder="ガブに対してアシレーヌを後出しする想定で..."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none"
-          />
-        </Section>
+            className="w-full rounded-xl border px-3.5 py-3 text-sm"
+            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
+                     fontSize: 16, resize: 'vertical' }} />
+        </Card>
 
-        {/* 結果 */}
-        <Section title="対戦結果">
+        {/* 対戦結果 */}
+        <Card title="対戦結果">
           <div className="flex gap-2">
-            {RESULT_OPTS.map(({ v, label, cls }) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setResult(v)}
-                className={`flex-1 rounded-xl py-3 text-sm font-bold transition-opacity ${result === v ? cls : 'border border-gray-300 bg-white text-gray-600 opacity-60'}`}
-              >
+            {RESULT_OPTS.map(({ v, label, activeBg, activeShadow }) => (
+              <button key={v} type="button" onClick={() => setResult(v)}
+                className="flex-1 rounded-2xl py-3.5 text-sm font-black transition-all"
+                style={result === v
+                  ? { background: activeBg, color: '#fff', boxShadow: activeShadow, border: '2px solid transparent' }
+                  : { background: 'var(--card)', color: 'var(--ink-sub)', border: '2px solid var(--line)' }}>
                 {label}
               </button>
             ))}
           </div>
-        </Section>
+        </Card>
 
         {/* 振り返り */}
-        <Section title="振り返り（任意）">
-          <textarea
-            value={reflection}
-            onChange={(e) => setReflection(e.target.value)}
-            rows={3}
-            maxLength={1000}
+        <Card title="振り返り（任意）">
+          <textarea value={reflection} onChange={(e) => setReflection(e.target.value)}
+            rows={4} maxLength={1000}
             placeholder="ターン1の選択が..."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none"
-          />
-        </Section>
+            className="w-full rounded-xl border px-3.5 py-3 text-sm"
+            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
+                     fontSize: 16, resize: 'vertical' }} />
+        </Card>
 
         {/* レート */}
-        <Section title="対戦後レート（任意）">
-          <input
-            type="number"
-            value={ratingAfter}
+        <Card title="対戦後レート（任意）">
+          <input type="number" value={ratingAfter}
             onChange={(e) => setRatingAfter(e.target.value)}
             placeholder="1500"
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:border-red-500 focus:outline-none"
-          />
-        </Section>
+            className="w-full rounded-xl border px-3.5 py-3 text-sm"
+            style={{ background: 'var(--card)', borderColor: 'var(--line)', color: 'var(--ink)',
+                     fontSize: 16 }} />
+        </Card>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && (
+          <p className="rounded-xl px-4 py-3 text-sm font-medium"
+            style={{ background: 'var(--pb-soft)', color: 'var(--pb)' }}>
+            {error}
+          </p>
+        )}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full rounded-xl bg-red-600 py-3.5 text-sm font-bold text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={saving}
+          className="flex h-14 w-full items-center justify-center rounded-2xl text-sm font-bold text-white disabled:opacity-50"
+          style={{ background: 'var(--mb)', boxShadow: '0 6px 18px rgba(91,47,176,0.35)' }}>
           {saving ? '記録中...' : '対戦を記録する'}
         </button>
       </form>
@@ -282,10 +285,13 @@ export default function NewBattlePage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm font-semibold text-gray-700">{title}</p>
+    <div className="rounded-[18px] border p-5"
+      style={{ background: 'var(--card)', borderColor: 'var(--line)',
+               boxShadow: '0 4px 14px rgba(45,30,15,0.04)' }}>
+      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em]"
+        style={{ color: 'var(--ink-sub)' }}>{title}</p>
       {children}
     </div>
   );

@@ -44,10 +44,10 @@ async function getBattles(my?: string, opp?: string): Promise<BattleRow[]> {
   return rows;
 }
 
-const RESULT_BADGE: Record<string, { label: string; cls: string }> = {
-  win: { label: '勝', cls: 'bg-blue-100 text-blue-700' },
-  lose: { label: '負', cls: 'bg-red-100 text-red-700' },
-  draw: { label: '分', cls: 'bg-gray-100 text-gray-600' },
+const RESULT_CHIP: Record<string, { label: string; bg: string; color: string }> = {
+  win:  { label: '勝', bg: 'var(--sb)',      color: '#fff' },
+  lose: { label: '負', bg: 'var(--pb)',      color: '#fff' },
+  draw: { label: '分', bg: 'var(--ink-sub)', color: '#fff' },
 };
 
 export default async function HistoryPage({
@@ -59,14 +59,15 @@ export default async function HistoryPage({
   const battles = await getBattles(my, opp);
 
   return (
-    <div className="flex flex-col gap-4 p-4 pb-10">
+    <div className="flex flex-col gap-4 p-4 pb-10 pt-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">対戦履歴</h1>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>対戦履歴</h1>
         <Link
           href="/battles/new"
-          className="rounded-xl bg-red-600 px-3 py-1.5 text-sm font-bold text-white"
+          className="rounded-xl px-3.5 py-2 text-sm font-bold text-white"
+          style={{ background: 'var(--mb)', boxShadow: '0 4px 12px rgba(91,47,176,0.30)' }}
         >
-          ＋ 記録する
+          ＋ 記録
         </Link>
       </div>
 
@@ -76,24 +77,26 @@ export default async function HistoryPage({
 
       {battles.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-4xl">📋</p>
-          <p className="font-semibold text-gray-700">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full text-3xl"
+            style={{ background: 'var(--bg-warm)' }}>
+            📋
+          </div>
+          <p className="font-bold" style={{ color: 'var(--ink)' }}>
             {my || opp ? '条件に一致する対戦がありません' : '対戦記録がありません'}
           </p>
           {!my && !opp && (
-            <p className="text-sm text-gray-500">対戦を記録して履歴を積み上げましょう</p>
+            <p className="text-sm" style={{ color: 'var(--ink-mute)' }}>
+              対戦を記録して履歴を積み上げましょう
+            </p>
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2.5">
           {battles.map((b) => {
-            const badge = RESULT_BADGE[b.result] ?? RESULT_BADGE.draw;
+            const chip = RESULT_CHIP[b.result] ?? RESULT_CHIP.draw;
             const myNames = [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name]
-              .filter(Boolean)
-              .join(' / ');
-            const oppNames = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name]
-              .filter(Boolean)
-              .join(' / ');
+              .filter(Boolean);
+            const oppNames = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name].filter(Boolean);
             const date = new Date(b.created_at).toLocaleDateString('ja-JP', {
               month: 'numeric',
               day: 'numeric',
@@ -102,21 +105,62 @@ export default async function HistoryPage({
               <Link
                 key={b.id}
                 href={`/history/${b.id}`}
-                className="flex items-start gap-3 rounded-2xl bg-white p-4 shadow-sm"
+                className="flex flex-col gap-2.5 rounded-[18px] border p-4"
+                style={{
+                  background: 'var(--card)',
+                  borderColor: 'var(--line)',
+                  boxShadow: '0 4px 14px rgba(45,30,15,0.04)',
+                }}
               >
-                <span
-                  className={`mt-0.5 shrink-0 rounded-lg px-2 py-1 text-xs font-bold ${badge.cls}`}
-                >
-                  {badge.label}
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <p className="truncate text-sm font-medium text-gray-800">{myNames || '—'}</p>
-                  <p className="truncate text-xs text-gray-500">vs {oppNames || '—'}</p>
+                {/* Meta row */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black"
+                    style={{ background: chip.bg, color: chip.color }}
+                  >
+                    {chip.label}
+                  </span>
+                  <span className="text-sm font-bold"
+                    style={{ color: chip.bg === 'var(--sb)' ? 'var(--sb)' : chip.bg === 'var(--pb)' ? 'var(--pb)' : 'var(--ink-sub)' }}>
+                    {b.result === 'win' ? '勝利' : b.result === 'lose' ? '敗北' : '引き分け'}
+                  </span>
+                  {b.rating_after && (
+                    <span className="ml-auto rounded-full px-2 py-0.5 text-xs font-black"
+                      style={{ background: 'var(--bg-warm)', color: 'var(--ink-sub)' }}>
+                      {b.rating_after}
+                    </span>
+                  )}
+                  <span className="text-xs" style={{ color: 'var(--ink-mute)' }}>{date}</span>
                 </div>
-                <span className="shrink-0 text-xs text-gray-400">{date}</span>
+                {/* Versus row */}
+                <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] font-black tracking-wider"
+                      style={{ color: 'var(--ink-sub)' }}>自分</span>
+                    <span className="text-xs font-bold leading-relaxed"
+                      style={{ color: 'var(--ink)' }}>
+                      {myNames.join(' · ') || '—'}
+                    </span>
+                  </div>
+                  <div className="flex h-full items-center px-1">
+                    <span className="text-[11px] font-black tracking-wider"
+                      style={{ color: 'var(--ink-mute)' }}>VS</span>
+                  </div>
+                  <div className="flex flex-col gap-0.5 text-right">
+                    <span className="text-[10px] font-black tracking-wider"
+                      style={{ color: 'var(--ink-sub)' }}>相手</span>
+                    <span className="text-xs font-bold leading-relaxed"
+                      style={{ color: 'var(--ink)' }}>
+                      {oppNames.join(' · ') || '—'}
+                    </span>
+                  </div>
+                </div>
               </Link>
             );
           })}
+          <p className="py-2 text-center text-xs" style={{ color: 'var(--ink-mute)' }}>
+            すべての対戦を表示しています
+          </p>
         </div>
       )}
     </div>

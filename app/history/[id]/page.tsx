@@ -25,10 +25,22 @@ async function getBattle(id: string): Promise<BattleDetail | null> {
   return data as BattleDetail | null;
 }
 
-const RESULT_LABEL: Record<string, { label: string; cls: string }> = {
-  win: { label: '勝ち', cls: 'bg-blue-100 text-blue-700' },
-  lose: { label: '負け', cls: 'bg-red-100 text-red-700' },
-  draw: { label: '引き分け', cls: 'bg-gray-100 text-gray-600' },
+const RESULT_HERO: Record<string, { label: string; sub: string; gradient: string }> = {
+  win:  {
+    label: '勝利',
+    sub: 'WIN',
+    gradient: 'linear-gradient(140deg, #1A56D4 0%, #2563D9 55%, #4D8AE8 100%)',
+  },
+  lose: {
+    label: '敗北',
+    sub: 'LOSE',
+    gradient: 'linear-gradient(140deg, #B0212C 0%, #E63946 60%, #F06070 100%)',
+  },
+  draw: {
+    label: '引き分け',
+    sub: 'DRAW',
+    gradient: 'linear-gradient(140deg, #5A5050 0%, #7A706A 100%)',
+  },
 };
 
 function NameTag({
@@ -41,10 +53,35 @@ function NameTag({
   item?: string | null;
 }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2">
-      <span className="text-sm font-medium text-gray-800">{name}</span>
-      {mega && <span className="text-xs font-bold text-purple-600">M</span>}
-      {item && <span className="ml-auto text-xs text-gray-400">{item}</span>}
+    <div className="flex items-center gap-2 rounded-xl border px-3 py-2.5"
+      style={{ background: 'var(--card)', borderColor: 'var(--line)' }}>
+      <span className="text-sm font-bold" style={{ color: 'var(--ink)' }}>{name}</span>
+      {mega && (
+        <span className="rounded-full px-1.5 py-0.5 text-[10px] font-black"
+          style={{ background: 'var(--hb-soft)', color: '#7B5310' }}>メガ</span>
+      )}
+      {item && (
+        <span className="ml-auto text-xs" style={{ color: 'var(--ink-sub)' }}>{item}</span>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, children, tint }: {
+  title: string;
+  children: React.ReactNode;
+  tint?: { bg: string; border: string };
+}) {
+  return (
+    <div className="rounded-[18px] border p-5"
+      style={{
+        background: tint?.bg ?? 'var(--card)',
+        borderColor: tint?.border ?? 'var(--line)',
+        boxShadow: '0 4px 14px rgba(45,30,15,0.04)',
+      }}>
+      <p className="mb-3 text-[11px] font-black uppercase tracking-[0.08em]"
+        style={{ color: 'var(--ink-sub)' }}>{title}</p>
+      {children}
     </div>
   );
 }
@@ -58,7 +95,7 @@ export default async function BattleDetailPage({
   const battle = await getBattle(id);
   if (!battle) notFound();
 
-  const badge = RESULT_LABEL[battle.result] ?? RESULT_LABEL.draw;
+  const hero = RESULT_HERO[battle.result] ?? RESULT_HERO.draw;
   const date = new Date(battle.created_at).toLocaleString('ja-JP', {
     year: 'numeric',
     month: 'numeric',
@@ -79,92 +116,134 @@ export default async function BattleDetailPage({
     { name: battle.opp_sel3_name, mega: battle.opp_sel3_mega },
   ].filter((s) => s.name);
 
+  const oppPartyNames: string[] = battle.opp_party_json ?? [];
+
   return (
-    <div className="flex flex-col gap-5 p-4 pb-10">
+    <div className="flex flex-col gap-4 p-4 pb-10 pt-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link href="/history" className="text-gray-500">←</Link>
-          <h1 className="text-xl font-bold text-gray-800">対戦詳細</h1>
+        <div className="flex items-center gap-3">
+          <Link href="/history"
+            className="flex h-9 w-9 items-center justify-center rounded-full"
+            style={{ background: 'var(--card)', border: '1px solid var(--line)', color: 'var(--ink)' }}>
+            ←
+          </Link>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--ink)' }}>対戦詳細</h1>
         </div>
         <DeleteBattleButton battleId={battle.id} />
       </div>
 
-      {/* 結果・日時 */}
-      <div className="flex items-center gap-3">
-        <span className={`rounded-xl px-4 py-1.5 text-sm font-bold ${badge.cls}`}>
-          {badge.label}
-        </span>
-        <span className="text-sm text-gray-500">{date}</span>
-        {battle.rating_after && (
-          <span className="ml-auto text-sm font-semibold text-gray-700">
-            レート {battle.rating_after}
-          </span>
-        )}
+      {/* Result hero card */}
+      <div className="relative overflow-hidden rounded-[20px] p-5"
+        style={{ background: hero.gradient }}>
+        <div className="absolute right-[-28px] top-[-28px] opacity-[0.12] select-none"
+          aria-hidden="true">
+          <div className="h-[130px] w-[130px] rounded-full border-[18px] border-white" />
+        </div>
+        <div className="text-[11px] font-black tracking-[0.12em] uppercase opacity-90 text-white">
+          {hero.sub}
+        </div>
+        <div className="mt-1 text-[32px] font-black text-white leading-none">
+          {hero.label}
+        </div>
+        <div className="mt-4 flex items-center gap-6">
+          {battle.rating_after && (
+            <div>
+              <div className="text-[10px] font-bold opacity-80 text-white">対戦後レート</div>
+              <div className="text-[22px] font-black text-white leading-none mt-0.5">
+                {battle.rating_after}
+              </div>
+            </div>
+          )}
+          <div className={battle.rating_after ? 'border-l border-white/30 pl-6' : ''}>
+            <div className="text-[10px] font-bold opacity-80 text-white">記録日時</div>
+            <div className="text-sm font-bold text-white mt-0.5">{date}</div>
+          </div>
+        </div>
       </div>
 
-      {/* 自分の選出 */}
-      <Section title="自分の選出">
-        <div className="flex flex-col gap-2">
-          {mySlots.map(({ member, mega }, i) => (
-            <NameTag
-              key={i}
-              name={member!.pokemon_name}
-              mega={mega}
-              item={member!.held_item}
-            />
-          ))}
-          {mySlots.length === 0 && <p className="text-sm text-gray-400">未記録</p>}
+      {/* Versus section */}
+      <Section title="選出">
+        <div className="flex flex-col gap-3">
+          {/* My side */}
+          <div>
+            <p className="mb-2 text-[10px] font-black tracking-wider"
+              style={{ color: 'var(--ink-sub)' }}>自分</p>
+            <div className="flex flex-col gap-1.5">
+              {mySlots.map(({ member, mega }, i) => (
+                <NameTag key={i} name={member!.pokemon_name} mega={mega} item={member!.held_item} />
+              ))}
+              {mySlots.length === 0 && (
+                <p className="text-sm" style={{ color: 'var(--ink-mute)' }}>未記録</p>
+              )}
+            </div>
+          </div>
+          {/* Divider */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px" style={{ background: 'var(--line)' }} />
+            <span className="text-[11px] font-black tracking-[0.1em]"
+              style={{ color: 'var(--ink-mute)' }}>VS</span>
+            <div className="flex-1 h-px" style={{ background: 'var(--line)' }} />
+          </div>
+          {/* Opp side */}
+          <div>
+            <p className="mb-2 text-[10px] font-black tracking-wider"
+              style={{ color: 'var(--ink-sub)' }}>相手</p>
+            <div className="flex flex-col gap-1.5">
+              {oppSlots.map(({ name, mega }, i) => (
+                <NameTag key={i} name={name} mega={mega} />
+              ))}
+            </div>
+          </div>
         </div>
       </Section>
 
-      {/* 相手の選出 */}
-      <Section title="相手の選出">
-        <div className="flex flex-col gap-2">
-          {oppSlots.map(({ name, mega }, i) => (
-            <NameTag key={i} name={name} mega={mega} />
-          ))}
-        </div>
-      </Section>
-
-      {/* 相手のパーティ */}
-      {battle.opp_party_json && battle.opp_party_json.length > 0 && (
-        <Section title="相手のパーティ">
-          <div className="flex flex-wrap gap-2">
-            {battle.opp_party_json.map((name, i) => (
-              <span key={i} className="rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-sm text-gray-700">
-                {name}
-              </span>
-            ))}
+      {/* Opp party */}
+      {oppPartyNames.length > 0 && (
+        <Section title="相手のパーティ（事前情報）">
+          <div className="grid grid-cols-3 gap-2">
+            {oppPartyNames.map((name, i) => {
+              const isSelected = oppSlots.some((s) => s.name === name);
+              return (
+                <div key={i}
+                  className="relative rounded-[10px] border px-2 py-2 text-center"
+                  style={{
+                    background: isSelected ? 'var(--mb-soft)' : 'var(--card-soft)',
+                    borderColor: isSelected ? 'var(--mb)' : 'var(--line)',
+                  }}>
+                  {isSelected && (
+                    <span className="absolute -top-2 right-1 rounded-full px-1.5 py-0.5 text-[9px] font-black text-white"
+                      style={{ background: 'var(--mb)' }}>選出</span>
+                  )}
+                  <span className="text-xs font-bold" style={{ color: 'var(--ink)' }}>{name}</span>
+                </div>
+              );
+            })}
           </div>
         </Section>
       )}
 
-      {/* 選出意図 */}
+      {/* Intent */}
       {battle.selection_intent && (
-        <Section title="選出意図">
-          <p className="whitespace-pre-wrap rounded-xl bg-white p-3 text-sm text-gray-700 shadow-sm">
+        <Section title="選出意図"
+          tint={{ bg: 'var(--mb-tint)', border: 'var(--mb-soft)' }}>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed"
+            style={{ color: 'var(--ink)' }}>
             {battle.selection_intent}
           </p>
         </Section>
       )}
 
-      {/* 振り返り */}
+      {/* Reflection */}
       {battle.reflection && (
-        <Section title="振り返り">
-          <p className="whitespace-pre-wrap rounded-xl bg-white p-3 text-sm text-gray-700 shadow-sm">
+        <Section title="振り返り"
+          tint={{ bg: '#FFF9EF', border: 'var(--hb-soft)' }}>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed"
+            style={{ color: 'var(--ink)' }}>
             {battle.reflection}
           </p>
         </Section>
       )}
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm font-semibold text-gray-700">{title}</p>
-      {children}
     </div>
   );
 }

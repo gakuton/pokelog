@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#dc2626',
+  themeColor: '#7B4FD1',
   width: 'device-width',
   initialScale: 1,
 };
@@ -18,8 +18,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" className="h-full">
-      <body className="flex min-h-full flex-col bg-gray-50 antialiased">
-        <main className="flex-1 pb-20">{children}</main>
+      <body className="flex min-h-full flex-col antialiased">
+        <main className="flex-1 pb-32">{children}</main>
         <BottomNav />
       </body>
     </html>
