@@ -1,6 +1,8 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import type { Battle } from '@/lib/types';
+import HistoryFilterBar from '@/components/history/HistoryFilterBar';
 
 type BattleRow = Battle & {
   sel1: { pokemon_name: string } | null;
@@ -19,13 +21,27 @@ async function getBattles(my?: string, opp?: string): Promise<BattleRow[]> {
       sel3:my_sel3_id(pokemon_name)
     `)
     .order('created_at', { ascending: false })
-    .limit(100);
+    .limit(200);
 
-  if (my) q = q.or(`sel1.pokemon_name.ilike.%${my}%,sel2.pokemon_name.ilike.%${my}%,sel3.pokemon_name.ilike.%${my}%`);
-  if (opp) q = q.or(`opp_sel1_name.ilike.%${opp}%,opp_sel2_name.ilike.%${opp}%,opp_sel3_name.ilike.%${opp}%`);
+  if (opp) {
+    q = q.or(
+      `opp_sel1_name.ilike.%${opp}%,opp_sel2_name.ilike.%${opp}%,opp_sel3_name.ilike.%${opp}%`,
+    );
+  }
 
   const { data } = await q;
-  return (data ?? []) as BattleRow[];
+  let rows = (data ?? []) as BattleRow[];
+
+  if (my) {
+    const myLower = my.toLowerCase();
+    rows = rows.filter((b) =>
+      [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name].some((n) =>
+        n?.toLowerCase().includes(myLower),
+      ),
+    );
+  }
+
+  return rows;
 }
 
 const RESULT_BADGE: Record<string, { label: string; cls: string }> = {
@@ -44,19 +60,29 @@ export default async function HistoryPage({
 
   return (
     <div className="flex flex-col gap-4 p-4 pb-10">
-      <h1 className="text-xl font-bold text-gray-800">対戦履歴</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-800">対戦履歴</h1>
+        <Link
+          href="/battles/new"
+          className="rounded-xl bg-red-600 px-3 py-1.5 text-sm font-bold text-white"
+        >
+          ＋ 記録する
+        </Link>
+      </div>
+
+      <Suspense>
+        <HistoryFilterBar />
+      </Suspense>
 
       {battles.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <p className="text-4xl">📋</p>
-          <p className="font-semibold text-gray-700">対戦記録がありません</p>
-          <p className="text-sm text-gray-500">対戦を記録して履歴を積み上げましょう</p>
-          <Link
-            href="/battles/new"
-            className="mt-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white"
-          >
-            対戦を記録する
-          </Link>
+          <p className="font-semibold text-gray-700">
+            {my || opp ? '条件に一致する対戦がありません' : '対戦記録がありません'}
+          </p>
+          {!my && !opp && (
+            <p className="text-sm text-gray-500">対戦を記録して履歴を積み上げましょう</p>
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-2">
@@ -78,7 +104,9 @@ export default async function HistoryPage({
                 href={`/history/${b.id}`}
                 className="flex items-start gap-3 rounded-2xl bg-white p-4 shadow-sm"
               >
-                <span className={`mt-0.5 shrink-0 rounded-lg px-2 py-1 text-xs font-bold ${badge.cls}`}>
+                <span
+                  className={`mt-0.5 shrink-0 rounded-lg px-2 py-1 text-xs font-bold ${badge.cls}`}
+                >
                   {badge.label}
                 </span>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
