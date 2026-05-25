@@ -110,9 +110,9 @@ export default function ReportPage() {
       fetch(`/api/report/opp-pokemon${q}`).then((r) => r.json()),
       fetch(`/api/report/summary${q}`).then((r) => r.json()),
     ]).then(([my, opp, sum]) => {
-      setMyRates(my);
-      setOppRates(opp);
-      setSummary(sum);
+      setMyRates(Array.isArray(my) ? my : []);
+      setOppRates(Array.isArray(opp) ? opp : []);
+      setSummary(sum && typeof sum === 'object' && 'total' in sum ? sum : null);
       setLoading(false);
     });
   }, [partyId]);
