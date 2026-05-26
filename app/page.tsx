@@ -1,12 +1,31 @@
+export const dynamic = 'force-dynamic';
+
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
-import type { WinRateSummary, Battle, Party, PokemonMember } from '@/lib/types';
+import type { Battle, Party, PokemonMember } from '@/lib/types';
 import PokeAvatar from '@/components/common/PokeAvatar';
 
-async function getSummary(): Promise<WinRateSummary | null> {
+type HomeSummary = {
+  total_wins: number; total_losses: number; total_draws: number;
+  total_win_rate: number; recent10_win_rate: number;
+  recent10_wins: number; latest_rating: number | null;
+};
+
+async function getSummary(): Promise<HomeSummary | null> {
   const sb = createClient();
-  const { data } = await sb.from('win_rate_summary').select('*').single();
-  return data as WinRateSummary | null;
+  const { data } = await sb.from('battles').select('result, rating_after').order('created_at', { ascending: false });
+  if (!data || data.length === 0) return null;
+  const wins = data.filter((b) => b.result === 'win').length;
+  const losses = data.filter((b) => b.result === 'lose').length;
+  const draws = data.filter((b) => b.result === 'draw').length;
+  const total = data.length;
+  const total_win_rate = total > 0 ? Math.round((wins / total) * 100) : 0;
+  const recent10 = data.slice(0, 10);
+  const r10wins = recent10.filter((b) => b.result === 'win').length;
+  const r10total = recent10.length;
+  const recent10_win_rate = r10total > 0 ? Math.round((r10wins / r10total) * 100) : 0;
+  const latest_rating = data.find((b) => b.rating_after != null)?.rating_after ?? null;
+  return { total_wins: wins, total_losses: losses, total_draws: draws, total_win_rate, recent10_win_rate, recent10_wins: r10wins, latest_rating };
 }
 
 type RecentBattle = Battle & {

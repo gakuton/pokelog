@@ -1,7 +1,7 @@
 [
   {"name":"ガブリアス","types":["ドラゴン","じめん"],"base":{"hp":108,"atk":130,"def":95,"spa":80,"spd":85,"spe":102},"has_mega":true},
   {"name":"アシレーヌ","types":["みず","フェアリー"],"base":{"hp":80,"atk":74,"def":74,"spa":126,"spd":116,"spe":60},"has_mega":false},
-  {"name":"ブリジュラス","types":["ドラゴン","こおり"],"base":{"hp":115,"atk":145,"def":92,"spa":75,"spd":86,"spe":87},"has_mega":false},
+  {"name":"ブリジュラス","types":["はがね","ドラゴン"],"base":{"hp":90,"atk":105,"def":130,"spa":125,"spd":65,"spe":85},"has_mega":false},
   {"name":"リザードン","types":["ほのお","ひこう"],"base":{"hp":78,"atk":84,"def":78,"spa":109,"spd":85,"spe":100},"has_mega":true},
   {"name":"アーマーガア","types":["はがね","ひこう"],"base":{"hp":98,"atk":87,"def":105,"spa":53,"spd":85,"spe":60},"has_mega":false},
   {"name":"カバルドン","types":["じめん"],"base":{"hp":108,"atk":112,"def":118,"spa":68,"spd":72,"spe":47},"has_mega":false},

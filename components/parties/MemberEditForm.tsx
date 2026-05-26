@@ -48,7 +48,7 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
 
   const currentPokemon = master.find((p) => p.name === form.pokemon_name);
   const evSum = EV_KEYS.reduce((s, k) => s + (form[k] ?? 0), 0);
-  const evRemaining = 510 - evSum;
+  const evRemaining = 66 - evSum;
 
   const calcStats = currentPokemon
     ? calcAllStats(
@@ -59,9 +59,9 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
     : null;
 
   function setEv(key: typeof EV_KEYS[number], val: number) {
-    const clamped = Math.max(0, Math.min(252, val));
+    const clamped = Math.max(0, Math.min(32, val));
     const newSum = evSum - (form[key] ?? 0) + clamped;
-    if (newSum > 510) return;
+    if (newSum > 66) return;
     setForm((f) => ({ ...f, [key]: clamped }));
   }
 
@@ -199,21 +199,21 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
           <div className="section-label" style={{ margin: 0 }}>努力値</div>
           <span style={{ fontSize: 12, fontWeight: 800,
                          color: evRemaining < 0 ? 'var(--pb)' : 'var(--ink-sub)' }}>
-            {evSum} / 510 {evRemaining < 0 && '⚠ 超過'}
+            {evSum} / 66 {evRemaining < 0 && '⚠ 超過'}
           </span>
         </div>
         <div className="ev-grid">
           {EV_KEYS.map((k, i) => {
             const statKey = STAT_KEYS[i];
             const statVal = calcStats?.[statKey];
-            const pct = Math.min(100, ((form[k] ?? 0) / 252) * 100);
+            const pct = Math.min(100, ((form[k] ?? 0) / 32) * 100);
             return (
               <div key={k} className="ev-cell">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 2px' }}>
                   <span className="ev-label">{STAT_LABELS[statKey]}</span>
                   {statVal && <span className="ev-stat">{statVal}</span>}
                 </div>
-                <input type="number" min={0} max={252} value={form[k]}
+                <input type="number" min={0} max={32} value={form[k]}
                   onChange={(e) => setEv(k, Number(e.target.value))} />
                 <div className="ev-bar"><span style={{ width: `${pct}%` }} /></div>
               </div>
