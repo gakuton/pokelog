@@ -63,7 +63,15 @@ export default async function BattleDetailPage({ params }: { params: Promise<{ i
           </Link>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>対戦詳細</h1>
         </div>
-        <DeleteBattleButton battleId={battle.id} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Link href={`/battles/${battle.id}/edit`}
+            style={{ height: 36, padding: '0 14px', borderRadius: 18, display: 'grid', placeItems: 'center',
+                     background: 'var(--mb-tint)', border: '1px solid var(--mb-soft)',
+                     color: 'var(--mb)', fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+            編集
+          </Link>
+          <DeleteBattleButton battleId={battle.id} />
+        </div>
       </div>
 
       {/* Result hero */}
