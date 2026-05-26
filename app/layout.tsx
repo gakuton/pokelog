@@ -17,9 +17,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ja" className="h-full">
-      <body className="flex min-h-full flex-col antialiased">
-        <main className="flex-1 pb-32">{children}</main>
+    <html lang="ja" style={{ height: '100%' }}>
+      <body style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', WebkitFontSmoothing: 'antialiased' }}>
+        <main style={{ flex: 1, paddingBottom: 110 }}>{children}</main>
         <BottomNav />
       </body>
     </html>

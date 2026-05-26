@@ -19,8 +19,8 @@ export default function DeletePartyButton({ partyId }: { partyId: string }) {
     <button
       onClick={handleDelete}
       disabled={loading}
-      className="rounded-xl px-3 py-1.5 text-xs font-bold disabled:opacity-50"
-      style={{ border: '1px solid var(--pb-soft)', color: 'var(--pb)' }}
+      className="btn sm"
+      style={{ border: '1px solid var(--pb-soft)', color: 'var(--pb)', background: 'var(--pb-soft)', opacity: loading ? 0.5 : 1 }}
     >
       削除
     </button>
