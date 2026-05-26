@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
-import type { WinRateSummary, Battle } from '@/lib/types';
+import type { WinRateSummary, Battle, Party, PokemonMember } from '@/lib/types';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 async function getSummary(): Promise<WinRateSummary | null> {
   const sb = createClient();
@@ -20,12 +21,26 @@ async function getRecentBattles(): Promise<RecentBattle[]> {
     .from('battles')
     .select(`*, sel1:my_sel1_id(pokemon_name), sel2:my_sel2_id(pokemon_name), sel3:my_sel3_id(pokemon_name)`)
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(3);
   return (data ?? []) as RecentBattle[];
 }
 
+async function getFirstParty(): Promise<(Party & { pokemon_members: PokemonMember[] }) | null> {
+  const sb = createClient();
+  const { data } = await sb
+    .from('parties')
+    .select('*, pokemon_members(*)')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  return data as (Party & { pokemon_members: PokemonMember[] }) | null;
+}
+
 export default async function HomePage() {
-  const [summary, battles] = await Promise.all([getSummary(), getRecentBattles()]);
+  const [summary, battles, party] = await Promise.all([getSummary(), getRecentBattles(), getFirstParty()]);
+  const partyMembers = party
+    ? [...(party.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot)
+    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '20px 18px 110px' }}>
@@ -50,7 +65,7 @@ export default async function HomePage() {
         <div className="value">{summary?.latest_rating?.toLocaleString() ?? '—'}</div>
         <div style={{ display: 'flex', gap: 16, background: 'rgba(255,255,255,0.16)',
                       backdropFilter: 'blur(8px)', borderRadius: 14, padding: '10px 14px', marginTop: 4 }}>
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.8, letterSpacing: '0.08em' }}>通算勝率</div>
             <div style={{ fontFamily: 'var(--font-num)', fontSize: 20, fontWeight: 800, marginTop: 2 }}>
               {summary ? `${summary.total_win_rate}%` : '—'}
@@ -60,7 +75,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div style={{ width: 1, background: 'rgba(255,255,255,0.25)', alignSelf: 'stretch' }} />
-          <div>
+          <div style={{ flex: 1 }}>
             <div style={{ fontSize: 10, fontWeight: 700, opacity: 0.8, letterSpacing: '0.08em' }}>直近10戦</div>
             <div style={{ fontFamily: 'var(--font-num)', fontSize: 20, fontWeight: 800, marginTop: 2 }}>
               {summary ? `${summary.recent10_win_rate}%` : '—'}
@@ -81,6 +96,47 @@ export default async function HomePage() {
         新規対戦を記録
       </Link>
 
+      {/* Party preview */}
+      {partyMembers && (
+        <>
+          <div className="section-head">
+            <h2>パーティ編成</h2>
+            <Link href="/parties" style={{ color: 'var(--mb)', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+              編集 ›
+            </Link>
+          </div>
+          <div className="card" style={{ padding: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--ink)', marginBottom: 10 }}>
+              {party!.name}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+              {Array.from({ length: 6 }, (_, i) => {
+                const m = partyMembers.find((x) => x.slot === i + 1);
+                return (
+                  <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    {m?.pokemon_name ? (
+                      <PokeAvatar name={m.pokemon_name} size="xs" mega={m.has_mega_item} />
+                    ) : (
+                      <div className="poke-avatar xs" style={{ background: 'var(--line-soft)',
+                              border: '1px dashed var(--line)', color: 'var(--ink-mute)',
+                              fontSize: 16, fontWeight: 700 }}>
+                        <span>＋</span>
+                      </div>
+                    )}
+                    <div style={{ fontSize: 9, color: m?.pokemon_name ? 'var(--ink-sub)' : 'var(--ink-mute)',
+                                  textAlign: 'center', lineHeight: 1.1, fontWeight: 700,
+                                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                  maxWidth: '100%' }}>
+                      {m?.pokemon_name || `No.${i + 1}`}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Recent battles */}
       <div>
         <div className="section-head">
@@ -97,13 +153,9 @@ export default async function HomePage() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {battles.map((b) => {
-              const myNames = [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name]
-                .filter(Boolean).join('・');
-              const oppNames = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name]
-                .filter(Boolean).join('・');
-              const date = new Date(b.created_at).toLocaleDateString('ja-JP', {
-                month: 'numeric', day: 'numeric',
-              });
+              const myPokes = [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name].filter(Boolean) as string[];
+              const oppPokes = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name].filter(Boolean) as string[];
+              const date = new Date(b.created_at).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' });
               return (
                 <Link key={b.id} href={`/history/${b.id}`} className="battle-card">
                   <div className="meta">
@@ -124,13 +176,28 @@ export default async function HomePage() {
                   <div className="versus-row">
                     <div className="side">
                       <div className="side-label">自分</div>
-                      <div className="side-names">{myNames || '—'}</div>
+                      <div className="selection">
+                        {myPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
+                      </div>
+                      <div className="side-names">{myPokes.join('・') || '—'}</div>
                     </div>
                     <div className="vs-divider">VS</div>
                     <div className="side right">
                       <div className="side-label">相手</div>
-                      <div className="side-names">{oppNames || '—'}</div>
+                      <div className="selection" style={{ justifyContent: 'flex-end' }}>
+                        {oppPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
+                      </div>
+                      <div className="side-names">{oppPokes.join('・') || '—'}</div>
                     </div>
+                  </div>
+                  <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 8,
+                                display: 'flex', alignItems: 'center', gap: 6,
+                                fontSize: 11, color: 'var(--ink-sub)' }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6"/>
+                      <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                    {date}
                   </div>
                 </Link>
               );

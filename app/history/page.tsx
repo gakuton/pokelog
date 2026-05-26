@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import type { Battle } from '@/lib/types';
 import HistoryFilterBar from '@/components/history/HistoryFilterBar';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 type BattleRow = Battle & {
   sel1: { pokemon_name: string } | null;
@@ -47,10 +48,9 @@ export default async function HistoryPage({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>対戦履歴</h1>
-        <Link href="/battles/new" className="btn primary sm"
-          style={{ textDecoration: 'none' }}>
-          ＋ 記録
-        </Link>
+        {(my || opp) && (
+          <span className="badge tag">フィルター適用中</span>
+        )}
       </div>
 
       <Suspense>
@@ -70,10 +70,8 @@ export default async function HistoryPage({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {battles.map((b) => {
-            const myNames = [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name]
-              .filter(Boolean).join('・');
-            const oppNames = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name]
-              .filter(Boolean).join('・');
+            const myPokes = [b.sel1?.pokemon_name, b.sel2?.pokemon_name, b.sel3?.pokemon_name].filter(Boolean) as string[];
+            const oppPokes = [b.opp_sel1_name, b.opp_sel2_name, b.opp_sel3_name].filter(Boolean) as string[];
             const date = new Date(b.created_at).toLocaleDateString('ja-JP', {
               month: 'numeric', day: 'numeric',
             });
@@ -97,13 +95,28 @@ export default async function HistoryPage({
                 <div className="versus-row">
                   <div className="side">
                     <div className="side-label">自分</div>
-                    <div className="side-names">{myNames || '—'}</div>
+                    <div className="selection">
+                      {myPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
+                    </div>
+                    <div className="side-names">{myPokes.join('・') || '—'}</div>
                   </div>
                   <div className="vs-divider">VS</div>
                   <div className="side right">
                     <div className="side-label">相手</div>
-                    <div className="side-names">{oppNames || '—'}</div>
+                    <div className="selection" style={{ justifyContent: 'flex-end' }}>
+                      {oppPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
+                    </div>
+                    <div className="side-names">{oppPokes.join('・') || '—'}</div>
                   </div>
+                </div>
+                <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 8,
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              fontSize: 11, color: 'var(--ink-sub)' }}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6"/>
+                    <path d="M12 8v4l3 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                  {date}
                 </div>
               </Link>
             );
@@ -113,6 +126,13 @@ export default async function HistoryPage({
           </p>
         </div>
       )}
+
+      {/* FAB */}
+      <Link href="/battles/new" className="fab" aria-label="新規対戦を記録">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.6" strokeLinecap="round"/>
+        </svg>
+      </Link>
     </div>
   );
 }
