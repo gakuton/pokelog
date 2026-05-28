@@ -28,7 +28,7 @@ export default function HistoryFilterBar({ parties }: Props) {
 
   function clear() {
     setMyVal(''); setOppVal(''); setPartyVal('');
-    startTransition(() => router.push(pathname));
+    startTransition(() => router.push(`${pathname}?party_id=`));
   }
 
   return (

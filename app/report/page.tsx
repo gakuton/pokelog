@@ -51,7 +51,11 @@ export default function ReportPage() {
   const [tab, setTab] = useState<'my' | 'opp'>('my');
 
   useEffect(() => {
-    fetch('/api/parties').then((r) => r.json()).then((ps: Party[]) => setParties(ps));
+    fetch('/api/parties').then((r) => r.json()).then((ps: Party[]) => {
+      setParties(ps);
+      const active = ps.find((p: Party) => p.is_active);
+      if (active) setPartyId(active.id);
+    });
   }, []);
 
   useEffect(() => {

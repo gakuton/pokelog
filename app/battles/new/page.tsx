@@ -35,7 +35,9 @@ export default function NewBattlePage() {
     ]).then(([m, p]) => {
       setMaster(m);
       setParties(p);
-      if (p.length > 0) setPartyId(p[0].id);
+      const active = p.find((x: { is_active: boolean }) => x.is_active);
+      if (active) setPartyId(active.id);
+      else if (p.length > 0) setPartyId(p[0].id);
     });
   }, []);
 

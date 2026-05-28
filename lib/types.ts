@@ -1,6 +1,7 @@
 export interface Party {
   id: string;
   name: string;
+  is_active: boolean;
   created_at: string;
   updated_at?: string;
   pokemon_members?: PokemonMember[];

@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import type { Battle, Party } from '@/lib/types';
@@ -41,8 +42,14 @@ async function getBattles(my?: string, opp?: string, partyId?: string): Promise<
 
 async function getParties(): Promise<Party[]> {
   const sb = createClient();
-  const { data } = await sb.from('parties').select('id, name').order('created_at', { ascending: false });
+  const { data } = await sb.from('parties').select('id, name, is_active').order('created_at', { ascending: false });
   return (data ?? []) as Party[];
+}
+
+async function getActivePartyId(): Promise<string | null> {
+  const sb = createClient();
+  const { data } = await sb.from('parties').select('id').eq('is_active', true).single();
+  return data?.id ?? null;
 }
 
 export default async function HistoryPage({
@@ -51,6 +58,12 @@ export default async function HistoryPage({
   searchParams: Promise<{ my?: string; opp?: string; party_id?: string }>;
 }) {
   const { my, opp, party_id } = await searchParams;
+
+  if (party_id === undefined && !my && !opp) {
+    const activeId = await getActivePartyId();
+    if (activeId) redirect(`/history?party_id=${activeId}`);
+  }
+
   const [battles, parties] = await Promise.all([getBattles(my, opp, party_id), getParties()]);
 
   return (
