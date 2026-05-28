@@ -34,10 +34,6 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
             <p style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 1 }}>{filled}/6 匹登録済み</p>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <ActivePartyButton partyId={id} isActive={party.is_active ?? false} />
-          <DeletePartyButton partyId={id} />
-        </div>
       </div>
 
       <div style={{ background: 'var(--mb-tint)', border: '1px solid var(--mb-soft)',
@@ -83,6 +79,18 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
             </Link>
           );
         })}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <ActivePartyButton
+          partyId={id}
+          isActive={party.is_active ?? false}
+          style={{ width: '100%', height: 52, fontSize: 15, borderRadius: 'var(--r-lg)' }}
+        />
+        <DeletePartyButton
+          partyId={id}
+          style={{ width: '100%', height: 52, fontSize: 15, borderRadius: 'var(--r-lg)' }}
+        />
       </div>
     </div>
   );

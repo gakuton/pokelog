@@ -1,9 +1,10 @@
 'use client';
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export default function DeletePartyButton({ partyId }: { partyId: string }) {
+export default function DeletePartyButton({ partyId, style }: { partyId: string; style?: React.CSSProperties }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +21,7 @@ export default function DeletePartyButton({ partyId }: { partyId: string }) {
       onClick={handleDelete}
       disabled={loading}
       className="btn sm"
-      style={{ border: '1px solid var(--pb-soft)', color: 'var(--pb)', background: 'var(--pb-soft)', opacity: loading ? 0.5 : 1 }}
+      style={{ border: '1px solid var(--pb-soft)', color: 'var(--pb)', background: 'var(--pb-soft)', opacity: loading ? 0.5 : 1, ...style }}
     >
       削除
     </button>

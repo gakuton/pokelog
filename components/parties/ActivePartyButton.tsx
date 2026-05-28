@@ -1,11 +1,12 @@
 'use client';
 
+import React from 'react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type Props = { partyId: string; isActive: boolean };
+type Props = { partyId: string; isActive: boolean; style?: React.CSSProperties };
 
-export default function ActivePartyButton({ partyId, isActive }: Props) {
+export default function ActivePartyButton({ partyId, isActive, style }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +32,7 @@ export default function ActivePartyButton({ partyId, isActive }: Props) {
         background: isActive ? '#E8FBF0' : 'var(--mb-tint)',
         opacity: loading ? 0.5 : 1,
         fontWeight: 700,
+        ...style,
       }}
     >
       {isActive ? '✓ 利用中' : '利用中にする'}
