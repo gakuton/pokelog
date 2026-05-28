@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const memberIdField = z.string().uuid().nullable();
-const pokemonNameField = z.string().min(1).max(50);
+const oppNameField = z.string().max(50);
 
 export const battleCreateSchema = z.object({
   party_id: z.string().uuid().nullable(),
@@ -12,9 +12,9 @@ export const battleCreateSchema = z.object({
   my_sel2_mega: z.boolean(),
   my_sel3_mega: z.boolean(),
   opp_party_json: z.array(z.string()).nullable(),
-  opp_sel1_name: pokemonNameField,
-  opp_sel2_name: pokemonNameField,
-  opp_sel3_name: pokemonNameField,
+  opp_sel1_name: oppNameField,
+  opp_sel2_name: oppNameField,
+  opp_sel3_name: oppNameField,
   opp_sel1_mega: z.boolean(),
   opp_sel2_mega: z.boolean(),
   opp_sel3_mega: z.boolean(),
