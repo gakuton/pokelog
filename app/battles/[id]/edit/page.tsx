@@ -74,7 +74,7 @@ export default function EditBattlePage({ params }: { params: Promise<{ id: strin
 
   const mySelected = mySlots.filter((s) => s.memberId);
   const oppSelected = oppSlots.filter((s) => s.name);
-  const canStep2 = mySelected.length === 3 && oppSelected.length === 3;
+  const canStep2 = mySelected.length === 3;
   const canSave = canStep2 && result !== null;
 
   function toggleMyMember(member: PokemonMember) {

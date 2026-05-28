@@ -46,7 +46,7 @@ export default function NewBattlePage() {
 
   const mySelected = mySlots.filter((s) => s.memberId);
   const oppSelected = oppSlots.filter((s) => s.name);
-  const canStep2 = mySelected.length === 3 && oppSelected.length === 3;
+  const canStep2 = mySelected.length === 3;
   const canSave = canStep2 && result !== null;
 
   function toggleMyMember(member: PokemonMember) {
@@ -350,7 +350,7 @@ export default function NewBattlePage() {
           </button>
           {!canStep2 && (
             <p style={{ textAlign: 'center', fontSize: 12, color: 'var(--ink-sub)', marginTop: -6 }}>
-              自分の選出3体・相手の選出3体を入力してください
+              自分の選出3体を入力してください
             </p>
           )}
         </>

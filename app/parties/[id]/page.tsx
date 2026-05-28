@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import type { Party, PokemonMember } from '@/lib/types';
 import DeletePartyButton from '@/components/parties/DeletePartyButton';
+import PartyNameEditor from '@/components/parties/PartyNameEditor';
 
 async function getParty(id: string): Promise<Party & { pokemon_members: PokemonMember[] }> {
   const sb = createClient();
@@ -28,7 +29,7 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
             ←
           </Link>
           <div>
-            <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--ink)' }}>{party.name}</h1>
+            <PartyNameEditor partyId={id} initialName={party.name} />
             <p style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 1 }}>{filled}/6 匹登録済み</p>
           </div>
         </div>
