@@ -44,19 +44,18 @@ async function getRecentBattles(): Promise<RecentBattle[]> {
   return (data ?? []) as RecentBattle[];
 }
 
-async function getFirstParty(): Promise<(Party & { pokemon_members: PokemonMember[] }) | null> {
+async function getActiveParty(): Promise<(Party & { pokemon_members: PokemonMember[] }) | null> {
   const sb = createClient();
   const { data } = await sb
     .from('parties')
     .select('*, pokemon_members(*)')
-    .order('created_at', { ascending: false })
-    .limit(1)
+    .eq('is_active', true)
     .single();
   return data as (Party & { pokemon_members: PokemonMember[] }) | null;
 }
 
 export default async function HomePage() {
-  const [summary, battles, party] = await Promise.all([getSummary(), getRecentBattles(), getFirstParty()]);
+  const [summary, battles, party] = await Promise.all([getSummary(), getRecentBattles(), getActiveParty()]);
   const partyMembers = party
     ? [...(party.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot)
     : null;
@@ -119,8 +118,8 @@ export default async function HomePage() {
       {partyMembers && (
         <>
           <div className="section-head">
-            <h2>パーティ編成</h2>
-            <Link href="/parties" style={{ color: 'var(--mb)', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+            <h2>利用中のパーティ</h2>
+            <Link href={`/parties/${party!.id}`} style={{ color: 'var(--mb)', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
               編集 ›
             </Link>
           </div>
