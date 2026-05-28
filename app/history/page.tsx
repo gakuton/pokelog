@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
-import type { Battle } from '@/lib/types';
+import type { Battle, Party } from '@/lib/types';
 import HistoryFilterBar from '@/components/history/HistoryFilterBar';
 import PokeAvatar from '@/components/common/PokeAvatar';
 
@@ -11,7 +11,7 @@ type BattleRow = Battle & {
   sel3: { pokemon_name: string } | null;
 };
 
-async function getBattles(my?: string, opp?: string): Promise<BattleRow[]> {
+async function getBattles(my?: string, opp?: string, partyId?: string): Promise<BattleRow[]> {
   const sb = createClient();
   let q = sb
     .from('battles')
@@ -19,6 +19,9 @@ async function getBattles(my?: string, opp?: string): Promise<BattleRow[]> {
     .order('created_at', { ascending: false })
     .limit(200);
 
+  if (partyId) {
+    q = q.eq('party_id', partyId);
+  }
   if (opp) {
     q = q.or(`opp_sel1_name.ilike.%${opp}%,opp_sel2_name.ilike.%${opp}%,opp_sel3_name.ilike.%${opp}%`);
   }
@@ -36,34 +39,40 @@ async function getBattles(my?: string, opp?: string): Promise<BattleRow[]> {
   return rows;
 }
 
+async function getParties(): Promise<Party[]> {
+  const sb = createClient();
+  const { data } = await sb.from('parties').select('id, name').order('created_at', { ascending: false });
+  return (data ?? []) as Party[];
+}
+
 export default async function HistoryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ my?: string; opp?: string }>;
+  searchParams: Promise<{ my?: string; opp?: string; party_id?: string }>;
 }) {
-  const { my, opp } = await searchParams;
-  const battles = await getBattles(my, opp);
+  const { my, opp, party_id } = await searchParams;
+  const [battles, parties] = await Promise.all([getBattles(my, opp, party_id), getParties()]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{ fontSize: 20, fontWeight: 800, color: 'var(--ink)' }}>対戦履歴</h1>
-        {(my || opp) && (
+        {(my || opp || party_id) && (
           <span className="badge tag">フィルター適用中</span>
         )}
       </div>
 
       <Suspense>
-        <HistoryFilterBar />
+        <HistoryFilterBar parties={parties} />
       </Suspense>
 
       {battles.length === 0 ? (
         <div className="empty" style={{ marginTop: 20 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
           <p className="empty-title">
-            {my || opp ? '条件に一致する対戦がありません' : '対戦記録がありません'}
+            {my || opp || party_id ? '条件に一致する対戦がありません' : '対戦記録がありません'}
           </p>
-          {!my && !opp && (
+          {!my && !opp && !party_id && (
             <p className="empty-msg">対戦を記録して履歴を積み上げましょう</p>
           )}
         </div>

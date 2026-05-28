@@ -2,27 +2,32 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useState, useTransition } from 'react';
+import type { Party } from '@/lib/types';
 
-export default function HistoryFilterBar() {
+type Props = { parties: Party[] };
+
+export default function HistoryFilterBar({ parties }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [myVal, setMyVal] = useState(params.get('my') ?? '');
   const [oppVal, setOppVal] = useState(params.get('opp') ?? '');
+  const [partyVal, setPartyVal] = useState(params.get('party_id') ?? '');
   const [, startTransition] = useTransition();
 
-  const hasActiveFilter = !!params.get('my') || !!params.get('opp');
+  const hasActiveFilter = !!params.get('my') || !!params.get('opp') || !!params.get('party_id');
 
   function apply() {
     const q = new URLSearchParams();
     if (myVal) q.set('my', myVal);
     if (oppVal) q.set('opp', oppVal);
+    if (partyVal) q.set('party_id', partyVal);
     const qs = q.toString();
     startTransition(() => router.push(qs ? `${pathname}?${qs}` : pathname));
   }
 
   function clear() {
-    setMyVal(''); setOppVal('');
+    setMyVal(''); setOppVal(''); setPartyVal('');
     startTransition(() => router.push(pathname));
   }
 
@@ -32,6 +37,17 @@ export default function HistoryFilterBar() {
         <span className="section-label" style={{ margin: 0 }}>絞り込み</span>
         {hasActiveFilter && <span className="badge tag">フィルター適用中</span>}
       </div>
+
+      {parties.length > 0 && (
+        <div className="field" style={{ margin: '0 0 10px' }}>
+          <div className="field-label">パーティ</div>
+          <select value={partyVal} onChange={(e) => setPartyVal(e.target.value)} className="select">
+            <option value="">全パーティ</option>
+            {parties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
         <div className="field" style={{ margin: 0 }}>
           <div className="field-label">自分の選出</div>
