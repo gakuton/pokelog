@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { PokemonMember, PokemonMasterEntry } from '@/lib/types';
-import { NATURES, STAT_LABELS } from '@/lib/const';
+import { NATURES, STAT_LABELS, HELD_ITEMS } from '@/lib/const';
 import { calcAllStats } from '@/lib/calc';
 
 type Props = { partyId: string; slot: number; member: PokemonMember };
@@ -27,7 +27,9 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
   const [error, setError] = useState('');
   const [nameQuery, setNameQuery] = useState(member.pokemon_name ?? '');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showItemSuggestions, setShowItemSuggestions] = useState(false);
   const nameRef = useRef<HTMLDivElement>(null);
+  const itemRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/pokemon-master').then((r) => r.json()).then(setMaster);
@@ -38,6 +40,9 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
       if (nameRef.current && !nameRef.current.contains(e.target as Node)) {
         setShowSuggestions(false);
       }
+      if (itemRef.current && !itemRef.current.contains(e.target as Node)) {
+        setShowItemSuggestions(false);
+      }
     }
     document.addEventListener('mousedown', onClick);
     return () => document.removeEventListener('mousedown', onClick);
@@ -45,6 +50,10 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
 
   const suggestions = nameQuery.length >= 1
     ? master.filter((p) => p.name.includes(nameQuery)).slice(0, 8) : [];
+
+  const itemSuggestions = form.held_item.length >= 1
+    ? HELD_ITEMS.filter((item) => item.includes(form.held_item)).slice(0, 8)
+    : HELD_ITEMS.slice(0, 8);
 
   const currentPokemon = master.find((p) => p.name === form.pokemon_name);
   const evSum = EV_KEYS.reduce((s, k) => s + (form[k] ?? 0), 0);
@@ -179,9 +188,36 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
           </div>
           <div className="field" style={{ margin: 0 }}>
             <div className="field-label">持ち物</div>
-            <input type="text" value={form.held_item}
-              onChange={(e) => setForm((f) => ({ ...f, held_item: e.target.value }))}
-              className="input" style={{ fontSize: 16 }} />
+            <div ref={itemRef} style={{ position: 'relative' }}>
+              <input type="text" value={form.held_item}
+                onChange={(e) => { setForm((f) => ({ ...f, held_item: e.target.value })); setShowItemSuggestions(true); }}
+                onFocus={() => setShowItemSuggestions(true)}
+                className="input" style={{ fontSize: 16 }} />
+              {showItemSuggestions && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 20,
+                              background: 'var(--card)', border: '1px solid var(--line)',
+                              borderRadius: 14, overflow: 'hidden',
+                              boxShadow: '0 10px 30px rgba(43,28,75,0.12)' }}>
+                  {itemSuggestions.map((item) => (
+                    <button key={item} type="button"
+                      style={{ width: '100%', display: 'flex', alignItems: 'center',
+                               padding: '10px 14px', borderBottom: '1px solid var(--line-soft)',
+                               textAlign: 'left',
+                               background: item.endsWith('ナイト') ? 'var(--hb-soft)' : undefined }}
+                      onMouseDown={() => { setForm((f) => ({ ...f, held_item: item })); setShowItemSuggestions(false); }}>
+                      <span style={{ fontWeight: 700, fontSize: 13, color: item.endsWith('ナイト') ? '#7B5310' : 'var(--ink)' }}>
+                        {item}
+                      </span>
+                    </button>
+                  ))}
+                  {itemSuggestions.length === 0 && (
+                    <div style={{ padding: '10px 14px', fontSize: 13, color: 'var(--ink-mute)' }}>
+                      一致する持ち物なし
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         {form.held_item.endsWith('ナイト') && (
