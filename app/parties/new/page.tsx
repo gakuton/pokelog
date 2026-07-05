@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import type { Party, PokemonMember } from '@/lib/types';
+import type { Party, PokemonMember, Season } from '@/lib/types';
 
 type SourceParty = Party & { pokemon_members: PokemonMember[] };
 
@@ -12,10 +12,20 @@ function NewPartyForm() {
   const fromId = searchParams.get('from');
 
   const [name, setName] = useState('');
+  const [seasonId, setSeasonId] = useState('');
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [sourceMembers, setSourceMembers] = useState<PokemonMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(!!fromId);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/seasons').then((r) => r.json()).then((data: Season[]) => {
+      setSeasons(data);
+      // 現在のシーズン（end_date が最新 or null）をデフォルト選択
+      if (data.length > 0) setSeasonId(data[0].id);
+    });
+  }, []);
 
   useEffect(() => {
     if (!fromId) return;
@@ -24,6 +34,7 @@ function NewPartyForm() {
       .then((r) => r.json())
       .then((data: SourceParty) => {
         setName(data.name ?? '');
+        if (data.season_id) setSeasonId(data.season_id);
         setSourceMembers(
           [...(data.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot)
         );
@@ -42,7 +53,7 @@ function NewPartyForm() {
       const res = await fetch('/api/parties', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({ name: name.trim(), season_id: seasonId || null }),
       });
       if (!res.ok) throw new Error('作成に失敗しました');
       const party = await res.json();
@@ -101,22 +112,44 @@ function NewPartyForm() {
         </div>
       ) : (
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="card" style={{ padding: 16 }}>
-            <div className="section-label" style={{ margin: '0 0 8px' }}>パーティ名</div>
-            <input type="text" value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="例: ガブリアス軸"
-              maxLength={50}
-              className="input" />
-            {isDuplicate && sourceMembers.filter((m) => m.pokemon_name).length > 0 && (
-              <p style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-sub)', lineHeight: 1.6 }}>
-                {sourceMembers.filter((m) => m.pokemon_name).map((m) => m.pokemon_name).join('・')} をコピーします
-              </p>
-            )}
-            {!isDuplicate && (
-              <p style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-sub)', lineHeight: 1.6 }}>
-                パーティを作成後、各スロットにポケモンを登録してください
-              </p>
+          <div className="card" style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <div className="section-label" style={{ margin: '0 0 8px' }}>パーティ名</div>
+              <input type="text" value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="例: ガブリアス軸"
+                maxLength={50}
+                className="input" />
+              {isDuplicate && sourceMembers.filter((m) => m.pokemon_name).length > 0 && (
+                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-sub)', lineHeight: 1.6 }}>
+                  {sourceMembers.filter((m) => m.pokemon_name).map((m) => m.pokemon_name).join('・')} をコピーします
+                </p>
+              )}
+              {!isDuplicate && (
+                <p style={{ marginTop: 10, fontSize: 12, color: 'var(--ink-sub)', lineHeight: 1.6 }}>
+                  パーティを作成後、各スロットにポケモンを登録してください
+                </p>
+              )}
+            </div>
+
+            {seasons.length > 0 && (
+              <div>
+                <div className="section-label" style={{ margin: '0 0 8px' }}>シーズン</div>
+                <select
+                  value={seasonId}
+                  onChange={(e) => setSeasonId(e.target.value)}
+                  style={{
+                    width: '100%', height: 44, borderRadius: 'var(--r-md)',
+                    border: '1px solid var(--line)', padding: '0 12px',
+                    fontSize: 16, background: 'var(--card)', color: 'var(--ink)',
+                  }}
+                >
+                  <option value="">未割当</option>
+                  {seasons.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
 

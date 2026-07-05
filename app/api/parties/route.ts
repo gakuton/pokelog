@@ -2,12 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase';
 import { partyCreateSchema } from '@/lib/validations/party';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+  const seasonId = searchParams.get('season_id');
+
   const sb = createClient();
-  const { data, error } = await sb
+  let query = sb
     .from('parties')
-    .select('*, pokemon_members(*)')
+    .select('*, pokemon_members(*), season:seasons(*)')
     .order('created_at', { ascending: false });
+
+  if (seasonId === 'null') {
+    query = query.is('season_id', null);
+  } else if (seasonId) {
+    query = query.eq('season_id', seasonId);
+  }
+
+  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
@@ -22,7 +33,10 @@ export async function POST(req: NextRequest) {
   const sb = createClient();
   const { data: party, error: partyErr } = await sb
     .from('parties')
-    .insert({ name: parsed.data.name })
+    .insert({
+      name: parsed.data.name,
+      season_id: parsed.data.season_id ?? null,
+    })
     .select()
     .single();
   if (partyErr) return NextResponse.json({ error: partyErr.message }, { status: 500 });

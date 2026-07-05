@@ -1,16 +1,17 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
-import type { Party, PokemonMember } from '@/lib/types';
+import type { Party, PokemonMember, Season } from '@/lib/types';
 import DeletePartyButton from '@/components/parties/DeletePartyButton';
 import PartyNameEditor from '@/components/parties/PartyNameEditor';
 import ActivePartyButton from '@/components/parties/ActivePartyButton';
+import SeasonSelector from '@/components/parties/SeasonSelector';
 
-async function getParty(id: string): Promise<Party & { pokemon_members: PokemonMember[] }> {
+async function getParty(id: string): Promise<Party & { pokemon_members: PokemonMember[]; season: Season | null }> {
   const sb = createClient();
-  const { data, error } = await sb.from('parties').select('*, pokemon_members(*)').eq('id', id).single();
+  const { data, error } = await sb.from('parties').select('*, pokemon_members(*), season:seasons(*)').eq('id', id).single();
   if (error || !data) notFound();
-  return data as Party & { pokemon_members: PokemonMember[] };
+  return data as Party & { pokemon_members: PokemonMember[]; season: Season | null };
 }
 
 export default async function PartyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -89,6 +90,15 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
             </Link>
           );
         })}
+      </div>
+
+      {/* シーズン選択 */}
+      <div className="card" style={{ padding: '14px 16px' }}>
+        <SeasonSelector
+          partyId={id}
+          initialSeasonId={party.season_id ?? null}
+          initialSeasonName={party.season?.name ?? null}
+        />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

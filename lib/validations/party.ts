@@ -29,6 +29,14 @@ export type MemberUpdateInput = z.infer<typeof memberUpdateSchema>;
 
 export const partyCreateSchema = z.object({
   name: z.string().min(1).max(50),
+  season_id: z.string().uuid().nullable().optional(),
 });
 
 export type PartyCreateInput = z.infer<typeof partyCreateSchema>;
+
+export const partyUpdateSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  season_id: z.string().uuid().nullable().optional(),
+});
+
+export type PartyUpdateInput = z.infer<typeof partyUpdateSchema>;

@@ -1,7 +1,17 @@
+export interface Season {
+  id: string;
+  name: string;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+}
+
 export interface Party {
   id: string;
   name: string;
   is_active: boolean;
+  season_id: string | null;
+  season?: Season | null;
   created_at: string;
   updated_at?: string;
   pokemon_members?: PokemonMember[];
