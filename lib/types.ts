@@ -12,14 +12,22 @@ export interface Party {
   is_active: boolean;
   season_id: string | null;
   season?: Season | null;
+  current_version_id: string;
   created_at: string;
   updated_at?: string;
   pokemon_members?: PokemonMember[];
 }
 
+export interface PartyVersion {
+  id: string;
+  party_id: string;
+  created_at: string;
+}
+
 export interface PokemonMember {
   id: string;
   party_id: string;
+  party_version_id: string;
   slot: number;
   pokemon_name: string;
   move1: string | null;

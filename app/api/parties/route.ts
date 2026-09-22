@@ -41,13 +41,29 @@ export async function POST(req: NextRequest) {
     .single();
   if (partyErr) return NextResponse.json({ error: partyErr.message }, { status: 500 });
 
+  const { data: version, error: verErr } = await sb
+    .from('party_versions')
+    .insert({ party_id: party.id })
+    .select()
+    .single();
+  if (verErr) return NextResponse.json({ error: verErr.message }, { status: 500 });
+
   const slots = Array.from({ length: 6 }, (_, i) => ({
     party_id: party.id,
+    party_version_id: version.id,
     slot: i + 1,
     pokemon_name: '',
   }));
   const { error: memberErr } = await sb.from('pokemon_members').insert(slots);
   if (memberErr) return NextResponse.json({ error: memberErr.message }, { status: 500 });
 
-  return NextResponse.json(party, { status: 201 });
+  const { data: updated, error: updErr } = await sb
+    .from('parties')
+    .update({ current_version_id: version.id })
+    .eq('id', party.id)
+    .select()
+    .single();
+  if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
+
+  return NextResponse.json(updated, { status: 201 });
 }

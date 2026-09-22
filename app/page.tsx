@@ -57,7 +57,9 @@ async function getActiveParty(): Promise<(Party & { pokemon_members: PokemonMemb
 export default async function HomePage() {
   const [summary, battles, party] = await Promise.all([getSummary(), getRecentBattles(), getActiveParty()]);
   const partyMembers = party
-    ? [...(party.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot)
+    ? (party.pokemon_members ?? [])
+        .filter((m) => m.party_version_id === party.current_version_id)
+        .sort((a, b) => a.slot - b.slot)
     : null;
 
   return (

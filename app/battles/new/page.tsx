@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Party, PokemonMember, PokemonMasterEntry } from '@/lib/types';
 import PokemonCombobox from '@/components/battles/PokemonCombobox';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 type SelSlot = { memberId: string | null; name: string; mega: boolean };
 type OppSlot = { name: string; mega: boolean };
@@ -42,9 +43,9 @@ export default function NewBattlePage() {
   }, []);
 
   const currentParty = parties.find((p) => p.id === partyId);
-  const partyMembers: PokemonMember[] = currentParty?.pokemon_members
-    ? [...currentParty.pokemon_members].sort((a, b) => a.slot - b.slot)
-    : [];
+  const partyMembers: PokemonMember[] = (currentParty?.pokemon_members ?? [])
+    .filter((m) => m.party_version_id === currentParty?.current_version_id)
+    .sort((a, b) => a.slot - b.slot);
 
   const mySelected = mySlots.filter((s) => s.memberId);
   const oppSelected = oppSlots.filter((s) => s.name);
@@ -235,6 +236,7 @@ export default function NewBattlePage() {
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
                         opacity: full ? 0.4 : 1,
                       }}>
+                      <PokeAvatar name={m.pokemon_name} size="xs" />
                       <span style={{ fontSize: 11, fontWeight: 700,
                                      color: selected ? 'var(--mb-deep)' : 'var(--ink)' }}>
                         {m.pokemon_name}

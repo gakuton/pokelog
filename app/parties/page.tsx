@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
 import type { Party, PokemonMember, Season } from '@/lib/types';
 import SeasonFilterTabs from '@/components/seasons/SeasonFilterTabs';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 async function getSeasons(): Promise<Season[]> {
   const sb = createClient();
@@ -111,7 +112,9 @@ export default async function PartiesPage({ searchParams }: Props) {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {parties.map((party) => {
-            const members = [...(party.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot);
+            const members = (party.pokemon_members ?? [])
+              .filter((m) => m.party_version_id === party.current_version_id)
+              .sort((a, b) => a.slot - b.slot);
             const filled = members.filter((m) => m.pokemon_name);
             return (
               <Link key={party.id} href={`/parties/${party.id}`} style={{ textDecoration: 'none' }}>
@@ -146,9 +149,7 @@ export default async function PartiesPage({ searchParams }: Props) {
                           }}
                         >
                           {name ? (
-                            <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--mb-deep)' }}>
-                              {name.charAt(0)}
-                            </span>
+                            <PokeAvatar name={name} size="xs" style={{ border: 'none', background: 'transparent' }} />
                           ) : (
                             <span style={{ fontSize: 14, color: 'var(--ink-mute)' }}>·</span>
                           )}

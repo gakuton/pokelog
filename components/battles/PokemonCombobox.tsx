@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import type { PokemonMasterEntry } from '@/lib/types';
 import { matchesPokemonQuery } from '@/lib/kana';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 type Props = {
   value: string;
@@ -46,6 +47,7 @@ export default function PokemonCombobox({ value, onChange, master, placeholder, 
                        padding: '10px 14px', borderBottom: '1px solid var(--line-soft)',
                        textAlign: 'left' }}
               onMouseDown={() => { setQuery(p.name); onChange(p.name); setOpen(false); }}>
+              <PokeAvatar name={p.name} size="xs" />
               <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', flex: 1 }}>{p.name}</span>
               <span style={{ fontSize: 11, color: 'var(--ink-sub)' }}>{p.types.join('/')}</span>
             </button>

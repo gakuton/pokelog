@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import type { Battle } from '@/lib/types';
 import DeleteBattleButton from '@/components/battles/DeleteBattleButton';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 type BattleDetail = Battle & {
   sel1: { pokemon_name: string; held_item: string | null } | null;
@@ -108,6 +109,7 @@ export default async function BattleDetailPage({ params }: { params: Promise<{ i
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10,
                                   background: 'var(--card-soft)', border: '1px solid var(--line)',
                                   borderRadius: 10, padding: '10px 12px' }}>
+              <PokeAvatar name={member!.pokemon_name} size="xs" />
               <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', flex: 1 }}>
                 {member!.pokemon_name}
               </span>
@@ -135,6 +137,7 @@ export default async function BattleDetailPage({ params }: { params: Promise<{ i
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10,
                                   background: 'var(--card-soft)', border: '1px solid var(--line)',
                                   borderRadius: 10, padding: '10px 12px' }}>
+              <PokeAvatar name={name} size="xs" />
               <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--ink)', flex: 1 }}>{name}</span>
               {mega && <span className="badge mega">メガ</span>}
             </div>
@@ -161,7 +164,10 @@ export default async function BattleDetailPage({ params }: { params: Promise<{ i
                       選出
                     </span>
                   )}
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{name}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <PokeAvatar name={name} size="xs" />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--ink)' }}>{name}</span>
+                  </div>
                 </div>
               );
             })}

@@ -386,6 +386,12 @@ input:focus, textarea:focus, select:focus {
 }
 .poke-avatar.lg .initial { font-size: 22px; }
 .poke-avatar.xs .initial { font-size: 13px; }
+.poke-avatar-img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  transform: scale(1.6);
+}
 .poke-avatar .mega-mark {
   position: absolute; right: -2px; top: -2px;
   width: 16px; height: 16px; border-radius: 8px;

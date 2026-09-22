@@ -36,7 +36,9 @@ function NewPartyForm() {
         setName(data.name ?? '');
         if (data.season_id) setSeasonId(data.season_id);
         setSourceMembers(
-          [...(data.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot)
+          (data.pokemon_members ?? [])
+            .filter((m) => m.party_version_id === data.current_version_id)
+            .sort((a, b) => a.slot - b.slot)
         );
       })
       .finally(() => setFetching(false));

@@ -6,6 +6,8 @@ import DeletePartyButton from '@/components/parties/DeletePartyButton';
 import PartyNameEditor from '@/components/parties/PartyNameEditor';
 import ActivePartyButton from '@/components/parties/ActivePartyButton';
 import SeasonSelector from '@/components/parties/SeasonSelector';
+import VersionHistory from '@/components/parties/VersionHistory';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 async function getParty(id: string): Promise<Party & { pokemon_members: PokemonMember[]; season: Season | null }> {
   const sb = createClient();
@@ -17,7 +19,9 @@ async function getParty(id: string): Promise<Party & { pokemon_members: PokemonM
 export default async function PartyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const party = await getParty(id);
-  const members = [...(party.pokemon_members ?? [])].sort((a, b) => a.slot - b.slot);
+  const members = (party.pokemon_members ?? [])
+    .filter((m) => m.party_version_id === party.current_version_id)
+    .sort((a, b) => a.slot - b.slot);
   const filled = members.filter((m) => m.pokemon_name).length;
 
   return (
@@ -60,14 +64,17 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
             <Link key={i} href={`/parties/${id}/members/${i + 1}`}
               style={{ textDecoration: 'none' }}>
               <div className="card" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px' }}>
-                <div style={{
-                  width: 34, height: 34, borderRadius: 17, flexShrink: 0,
-                  display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800,
-                  background: m?.pokemon_name ? 'var(--mb-soft)' : 'var(--bg-warm)',
-                  color: m?.pokemon_name ? 'var(--mb-deep)' : 'var(--ink-mute)',
-                }}>
-                  {i + 1}
-                </div>
+                {m?.pokemon_name ? (
+                  <PokeAvatar name={m.pokemon_name} size="md" mega={m.has_mega_item} />
+                ) : (
+                  <div style={{
+                    width: 34, height: 34, borderRadius: 17, flexShrink: 0,
+                    display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 800,
+                    background: 'var(--bg-warm)', color: 'var(--ink-mute)',
+                  }}>
+                    {i + 1}
+                  </div>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   {m?.pokemon_name ? (
                     <>
@@ -99,6 +106,11 @@ export default async function PartyDetailPage({ params }: { params: Promise<{ id
           initialSeasonId={party.season_id ?? null}
           initialSeasonName={party.season?.name ?? null}
         />
+      </div>
+
+      {/* 変更履歴 */}
+      <div className="card" style={{ padding: '14px 16px' }}>
+        <VersionHistory partyId={id} currentVersionId={party.current_version_id} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

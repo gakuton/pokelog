@@ -6,6 +6,7 @@ import type { PokemonMember, PokemonMasterEntry } from '@/lib/types';
 import { NATURES, STAT_LABELS, HELD_ITEMS } from '@/lib/const';
 import { calcAllStats } from '@/lib/calc';
 import { matchesPokemonQuery } from '@/lib/kana';
+import PokeAvatar from '@/components/common/PokeAvatar';
 
 type Props = { partyId: string; slot: number; member: PokemonMember };
 
@@ -148,6 +149,7 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
                     setNameQuery(p.name);
                     setShowSuggestions(false);
                   }}>
+                  <PokeAvatar name={p.name} size="xs" />
                   <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', flex: 1 }}>{p.name}</span>
                   <span style={{ fontSize: 11, color: 'var(--ink-sub)' }}>{p.types.join('/')}</span>
                 </button>
