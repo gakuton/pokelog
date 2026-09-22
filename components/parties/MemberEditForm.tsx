@@ -149,9 +149,11 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
                     setNameQuery(p.name);
                     setShowSuggestions(false);
                   }}>
-                  <PokeAvatar name={p.name} size="xs" />
-                  <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', flex: 1 }}>{p.name}</span>
-                  <span style={{ fontSize: 11, color: 'var(--ink-sub)' }}>{p.types.join('/')}</span>
+                  <PokeAvatar name={p.name} size="xs" style={{ flexShrink: 0 }} />
+                  <span style={{
+                    fontWeight: 700, fontSize: 14, color: 'var(--ink)', flex: 1, minWidth: 0,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>{p.name}</span>
                 </button>
               ))}
             </div>

@@ -193,7 +193,6 @@ input:focus, textarea:focus, select:focus {
 .battle-card .side { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .battle-card .side.right { align-items: flex-end; }
 .battle-card .side-label { font-size: 10px; font-weight: 800; color: var(--ink-mute); letter-spacing: 0.06em; }
-.battle-card .side-names { font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .battle-card .vs-divider { font-family: var(--font-num); color: var(--ink-mute); font-weight: 800; font-size: 14px; }
 .battle-card .selection { display: flex; gap: 4px; }
 
@@ -389,8 +388,7 @@ input:focus, textarea:focus, select:focus {
 .poke-avatar-img {
   width: 100%; height: 100%;
   object-fit: contain;
-  image-rendering: pixelated;
-  transform: scale(1.6);
+  object-position: center;
 }
 .poke-avatar .mega-mark {
   position: absolute; right: -2px; top: -2px;

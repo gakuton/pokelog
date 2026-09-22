@@ -3,7 +3,7 @@ import pokemonIcons from '@/public/data/pokemon_icons.json';
 const TINTS = ['#F4ECD9', '#ECE2FB', '#E0EAFC', '#FBEED3', '#FDE6E8', '#E8E8E2'];
 
 const ICON_BASE =
-  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons';
+  'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home';
 
 type Props = {
   name: string;

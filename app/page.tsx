@@ -199,7 +199,6 @@ export default async function HomePage() {
                       <div className="selection">
                         {myPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
                       </div>
-                      <div className="side-names">{myPokes.join('・') || '—'}</div>
                     </div>
                     <div className="vs-divider">VS</div>
                     <div className="side right">
@@ -207,7 +206,6 @@ export default async function HomePage() {
                       <div className="selection" style={{ justifyContent: 'flex-end' }}>
                         {oppPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
                       </div>
-                      <div className="side-names">{oppPokes.join('・') || '—'}</div>
                     </div>
                   </div>
                   <div style={{ borderTop: '1px solid var(--line-soft)', paddingTop: 8,

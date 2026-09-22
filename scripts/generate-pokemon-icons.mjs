@@ -49,6 +49,18 @@ function esc(name) {
   return JSON.stringify(name);
 }
 
+async function assertHomeArtworkExists(ids) {
+  const missing = [];
+  for (const id of ids) {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/home/${id}.png`,
+      { method: "HEAD" }
+    );
+    if (!res.ok) missing.push(id);
+  }
+  return missing;
+}
+
 async function resolveSpeciesNames(names) {
   const inList = names.map(esc).join(",");
   const data = await graphql(`query{
@@ -103,10 +115,15 @@ async function main() {
     }
   }
 
+  const missingArtwork = await assertHomeArtworkExists(Object.values(result));
+
   writeFileSync(OUTPUT_PATH, JSON.stringify(result, null, 2) + "\n");
   console.log(`resolved: ${Object.keys(result).length}/${names.length}`);
   if (unresolved.length) {
     console.log("unresolved:", unresolved.join(", "));
+  }
+  if (missingArtwork.length) {
+    console.log("missing home artwork for ids:", missingArtwork.join(", "));
   }
 }
 
