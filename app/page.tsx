@@ -197,14 +197,14 @@ export default async function HomePage() {
                     <div className="side">
                       <div className="side-label">自分</div>
                       <div className="selection">
-                        {myPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
+                        {myPokes.map((n) => <PokeAvatar key={n} name={n} size="md" />)}
                       </div>
                     </div>
                     <div className="vs-divider">VS</div>
                     <div className="side right">
                       <div className="side-label">相手</div>
                       <div className="selection" style={{ justifyContent: 'flex-end' }}>
-                        {oppPokes.map((n) => <PokeAvatar key={n} name={n} size="xs" />)}
+                        {oppPokes.map((n) => <PokeAvatar key={n} name={n} size="md" />)}
                       </div>
                     </div>
                   </div>

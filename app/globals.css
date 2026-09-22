@@ -190,8 +190,8 @@ input:focus, textarea:focus, select:focus {
 .battle-card .versus-row {
   display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center;
 }
-.battle-card .side { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.battle-card .side.right { align-items: flex-end; }
+.battle-card .side { display: flex; flex-direction: column; gap: 4px; min-width: 0; align-items: flex-end; }
+.battle-card .side.right { align-items: flex-start; }
 .battle-card .side-label { font-size: 10px; font-weight: 800; color: var(--ink-mute); letter-spacing: 0.06em; }
 .battle-card .vs-divider { font-family: var(--font-num); color: var(--ink-mute); font-weight: 800; font-size: 14px; }
 .battle-card .selection { display: flex; gap: 4px; }
