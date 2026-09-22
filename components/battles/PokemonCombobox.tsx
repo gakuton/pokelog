@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import type { PokemonMasterEntry } from '@/lib/types';
+import { matchesPokemonQuery } from '@/lib/kana';
 
 type Props = {
   value: string;
@@ -17,7 +18,7 @@ export default function PokemonCombobox({ value, onChange, master, placeholder, 
   const ref = useRef<HTMLDivElement>(null);
 
   const suggestions = query.length >= 1
-    ? master.filter((p) => p.name.includes(query)).slice(0, 8)
+    ? master.filter((p) => matchesPokemonQuery(p.name, query)).slice(0, 8)
     : [];
 
   function handleBlur(e: React.FocusEvent) {

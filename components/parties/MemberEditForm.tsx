@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { PokemonMember, PokemonMasterEntry } from '@/lib/types';
 import { NATURES, STAT_LABELS, HELD_ITEMS } from '@/lib/const';
 import { calcAllStats } from '@/lib/calc';
+import { matchesPokemonQuery } from '@/lib/kana';
 
 type Props = { partyId: string; slot: number; member: PokemonMember };
 
@@ -49,7 +50,7 @@ export default function MemberEditForm({ partyId, slot, member }: Props) {
   }, []);
 
   const suggestions = nameQuery.length >= 1
-    ? master.filter((p) => p.name.includes(nameQuery)).slice(0, 8) : [];
+    ? master.filter((p) => matchesPokemonQuery(p.name, nameQuery)).slice(0, 8) : [];
 
   const itemSuggestions = form.held_item.length >= 1
     ? HELD_ITEMS.filter((item) => item.includes(form.held_item)).slice(0, 8)
