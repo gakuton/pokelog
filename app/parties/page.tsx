@@ -15,6 +15,17 @@ async function getSeasons(): Promise<Season[]> {
   return (data ?? []) as Season[];
 }
 
+async function getActiveSeasonId(): Promise<string | null> {
+  const sb = createClient();
+  const { data } = await sb
+    .from('parties')
+    .select('season_id')
+    .eq('is_active', true)
+    .limit(1)
+    .maybeSingle();
+  return (data as { season_id: string | null } | null)?.season_id ?? null;
+}
+
 async function getParties(seasonId: string | null): Promise<(Party & { pokemon_members: PokemonMember[] })[]> {
   const sb = createClient();
   let query = sb
@@ -38,12 +49,22 @@ interface Props {
 
 export default async function PartiesPage({ searchParams }: Props) {
   const { season_id } = await searchParams;
-  const seasonId = season_id ?? null;
 
-  const [seasons, parties] = await Promise.all([
+  const [seasons, activeSeasonId] = await Promise.all([
     getSeasons(),
-    getParties(seasonId),
+    season_id === undefined ? getActiveSeasonId() : Promise.resolve(null),
   ]);
+
+  // season_id未指定時は、利用中パーティのシーズンをデフォルトにする
+  // 'all' は明示的に「すべて」を選んだ場合
+  const seasonId =
+    season_id === undefined
+      ? activeSeasonId
+      : season_id === 'all'
+        ? null
+        : season_id;
+
+  const parties = await getParties(seasonId);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '20px 18px 110px' }}>
@@ -65,7 +86,7 @@ export default async function PartiesPage({ searchParams }: Props) {
       {/* シーズンフィルタ */}
       {seasons.length > 0 && (
         <Suspense fallback={null}>
-          <SeasonFilterTabs seasons={seasons} />
+          <SeasonFilterTabs seasons={seasons} activeSeasonId={activeSeasonId} />
         </Suspense>
       )}
 

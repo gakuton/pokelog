@@ -8,12 +8,18 @@ interface Props {
   seasons: Season[];
 }
 
-export default function SeasonFilterTabs({ seasons }: Props) {
+interface TabsProps extends Props {
+  activeSeasonId: string | null;
+}
+
+export default function SeasonFilterTabs({ seasons, activeSeasonId }: TabsProps) {
   const searchParams = useSearchParams();
-  const current = searchParams.get('season_id');
+  const rawCurrent = searchParams.get('season_id');
+  // 未指定時は、利用中パーティのシーズンがデフォルト選択されている
+  const current = rawCurrent ?? activeSeasonId;
 
   const tabs = [
-    { label: 'すべて', value: null },
+    { label: 'すべて', value: 'all' },
     ...seasons.map((s) => ({ label: s.name, value: s.id })),
     { label: '未割当', value: 'null' },
   ];
@@ -24,11 +30,11 @@ export default function SeasonFilterTabs({ seasons }: Props) {
       WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
     }}>
       {tabs.map((tab) => {
-        const isActive = tab.value === current || (tab.value === null && current === null);
-        const href = tab.value === null ? '/parties' : `/parties?season_id=${tab.value}`;
+        const isActive = tab.value === current;
+        const href = `/parties?season_id=${tab.value}`;
         return (
           <Link
-            key={tab.value ?? '__all__'}
+            key={tab.value}
             href={href}
             style={{
               flexShrink: 0,
